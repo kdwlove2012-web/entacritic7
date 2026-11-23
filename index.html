@@ -3106,25 +3106,35 @@
 
         // Initialize App
         async function startApp() {
-            await initDeviceIdentity();
+            // 1. 네트워크(Firebase) 응답을 기다리지 않고 화면과 버튼을 즉시 렌더링
             loadFromLocalBackup();
-            await initAuth();
+            renderUserAccountUI();
+            bindDelegatedEvents();
+            renderGrid();
 
+            // 2. 기기 식별자 초기화 및 실시간 클라우드 동기화 시작
+            await initDeviceIdentity();
+            listenToRealtimeData();
+
+            // 3. 백그라운드 인증 및 세션 검증 (UI 차단 방지)
+            await initAuth();
             if (currentSession) {
                 const valid = await verifyCurrentSession();
                 if (!valid) {
                     saveSession(null);
+                    renderUserAccountUI();
                 }
             }
-
-            renderUserAccountUI();
-            bindDelegatedEvents();
-            listenToRealtimeData();
         }
 
-        window.onload = function() {
+        // ES 모듈 로드 시점과 무관하게 DOM 준비 즉시 실행 (window.onload 누락 버그 해결)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                startApp();
+            });
+        } else {
             startApp();
-        };
+        }
     </script>
 </body>
 </html>
