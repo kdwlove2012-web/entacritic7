@@ -56,9 +56,54 @@
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Loading Screen Animations */
+        @keyframes entaProgressSlide {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(0%); }
+            100% { transform: translateX(100%); }
+        }
+        .enta-loading-bar {
+            animation: entaProgressSlide 1.4s ease-in-out infinite;
+        }
+        @keyframes entaLogoPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 189, 63, 0.35); }
+            50% { transform: scale(1.05); box-shadow: 0 0 24px 4px rgba(255, 189, 63, 0.25); }
+        }
+        .enta-logo-pulse {
+            animation: entaLogoPulse 1.8s ease-in-out infinite;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col bg-white text-zinc-900 antialiased">
+
+    <!-- INITIAL LOADING SCREEN OVERLAY -->
+    <div id="appLoadingOverlay" class="fixed inset-0 z-50 bg-black text-white flex flex-col items-center justify-center p-6 transition-opacity duration-500">
+        <div class="flex flex-col items-center max-w-xs w-full text-center space-y-6">
+            <!-- Brand Logo -->
+            <div class="flex flex-col items-center gap-3">
+                <div class="enta-logo-pulse w-16 h-16 rounded-full border-[4px] border-[#ffbd3f] bg-black flex items-center justify-center">
+                    <span class="text-white font-black text-4xl tracking-tighter transform -rotate-12 leading-none">E</span>
+                </div>
+                <span class="text-3xl font-black tracking-tight text-white lowercase">entacritic</span>
+            </div>
+
+            <!-- 3-Color Metacritic Animated Progress Bar -->
+            <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden relative">
+                <div class="enta-loading-bar absolute inset-0 flex w-full h-full">
+                    <div class="w-1/3 bg-metagreen"></div>
+                    <div class="w-1/3 bg-metayellow"></div>
+                    <div class="w-1/3 bg-metared"></div>
+                </div>
+            </div>
+
+            <!-- Dynamic Loading Status Message -->
+            <div class="space-y-1.5">
+                <p id="loadingStatusText" class="text-sm font-bold text-zinc-200">엔트리 작품 데이터를 불러오는 중...</p>
+                <p class="text-[11px] text-zinc-500">잠시만 기다려 주세요. 실시간 평점을 동기화하고 있습니다.</p>
+            </div>
+        </div>
+    </div>
 
     <!-- HEADER (Metacritic Black Top Navigation) -->
     <header class="bg-black text-white sticky top-0 z-40">
@@ -1371,6 +1416,28 @@
         let reviewFilter = 'all';
         let currentProjectId = null;
         let uploadedImageDataUrl = null;
+        let isInitialDataLoaded = false;
+
+        /**
+         * 로딩 화면 상태 문구 업데이트
+         */
+        function updateLoadingText(text) {
+            const el = document.getElementById('loadingStatusText');
+            if (el && text) el.textContent = text;
+        }
+
+        /**
+         * 로딩 화면 부드럽게 닫기
+         */
+        function hideLoadingOverlay() {
+            const overlay = document.getElementById('appLoadingOverlay');
+            if (!overlay || overlay.dataset.hidden === 'true') return;
+            overlay.dataset.hidden = 'true';
+            overlay.classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 500);
+        }
 
         function loadSession() {
             try {
@@ -1532,19 +1599,33 @@
          * 실시간 Firestore 작품 데이터 구독
          */
         function listenToRealtimeData() {
+            if (!db) {
+                isInitialDataLoaded = true;
+                renderGrid();
+                hideLoadingOverlay();
+                return;
+            }
+
             renderGrid();
-            if (!db) return;
+
+            // 네트워크가 매우 느릴 경우에도 5초 후에는 화면이 열리도록 안전장치 설정
+            const fallbackTimer = setTimeout(() => {
+                hideLoadingOverlay();
+            }, 5000);
 
             try {
                 const projectsRef = collection(db, 'artifacts', appId, 'public', 'data', 'projects');
                 onSnapshot(projectsRef, (snapshot) => {
+                    clearTimeout(fallbackTimer);
                     const cloudProjects = [];
                     snapshot.forEach(docSnap => {
                         cloudProjects.push({ id: docSnap.id, ...docSnap.data() });
                     });
                     dbProjects = cloudProjects;
+                    isInitialDataLoaded = true;
                     saveProjectsToLocalBackup();
                     renderGrid();
+                    hideLoadingOverlay();
 
                     const searchPage = document.getElementById('searchPage');
                     if (searchQuery.trim() && searchPage && !searchPage.classList.contains('hidden')) {
@@ -1559,10 +1640,18 @@
                         }
                     }
                 }, (error) => {
+                    clearTimeout(fallbackTimer);
+                    isInitialDataLoaded = true;
                     console.error("Cloud projects sync error:", error);
+                    renderGrid();
+                    hideLoadingOverlay();
                 });
             } catch (e) {
+                clearTimeout(fallbackTimer);
+                isInitialDataLoaded = true;
                 console.error("Cloud listener setup error:", e);
+                renderGrid();
+                hideLoadingOverlay();
             }
         }
 
@@ -2313,12 +2402,44 @@
             });
         }
 
+        function buildSkeletonCardHtml(isCarousel = false) {
+            const sizeClasses = isCarousel
+                ? 'w-[270px] sm:w-[285px] shrink-0'
+                : 'w-full';
+            return `
+            <div class="${sizeClasses} bg-[#f4f4f4] rounded-xl overflow-hidden border border-zinc-200/80 animate-pulse">
+                <div class="p-3">
+                    <div class="w-full aspect-video rounded-md bg-zinc-300"></div>
+                </div>
+                <div class="px-4 pt-2 pb-4 space-y-2.5">
+                    <div class="h-4 bg-zinc-300 rounded w-3/4"></div>
+                    <div class="h-3 bg-zinc-200 rounded w-1/3"></div>
+                </div>
+                <div class="px-4 pb-4 pt-2 flex items-end justify-between">
+                    <div class="space-y-1.5 w-1/2">
+                        <div class="h-2.5 bg-zinc-200 rounded w-1/2"></div>
+                        <div class="h-3 bg-zinc-300 rounded w-3/4"></div>
+                    </div>
+                    <div class="w-12 h-12 rounded-lg bg-zinc-300"></div>
+                </div>
+            </div>`;
+        }
+
         window.renderGrid = function() {
             const carousel = document.getElementById('notableCarousel');
             const grid = document.getElementById('projectsGrid');
             if (!grid) return;
 
             updateCategoryActiveStyles();
+
+            // 첫 클라우드 응답 전이고 로컬 백업도 비어 있을 때는 빈 안내 대신 스켈레톤 카드 표시
+            if (!isInitialDataLoaded && dbProjects.length === 0) {
+                if (carousel) {
+                    carousel.innerHTML = Array.from({ length: 4 }, () => buildSkeletonCardHtml(true)).join('');
+                }
+                grid.innerHTML = Array.from({ length: 8 }, () => buildSkeletonCardHtml(false)).join('');
+                return;
+            }
 
             if (carousel) {
                 const notable = [...dbProjects]
@@ -3023,23 +3144,34 @@
 
         // Initialize App
         async function startApp() {
-            await initDeviceIdentity();
-            loadFromLocalBackup();
+            try {
+                updateLoadingText('보안 및 환경 설정 확인 중...');
+                await initDeviceIdentity();
+                loadFromLocalBackup();
 
-            if (isFirebaseConfigured && auth) {
-                await initAuth();
-            }
-
-            if (currentSession) {
-                const valid = await verifyCurrentSession();
-                if (!valid) {
-                    saveSession(null);
+                if (isFirebaseConfigured && auth) {
+                    updateLoadingText('실시간 서버에 연결하는 중...');
+                    await initAuth();
                 }
-            }
 
-            renderUserAccountUI();
-            bindDelegatedEvents();
-            listenToRealtimeData();
+                if (currentSession) {
+                    updateLoadingText('로그인 정보 확인 중...');
+                    const valid = await verifyCurrentSession();
+                    if (!valid) {
+                        saveSession(null);
+                    }
+                }
+
+                renderUserAccountUI();
+                bindDelegatedEvents();
+                updateLoadingText('최신 작품과 평점을 불러오는 중...');
+                listenToRealtimeData();
+            } catch (err) {
+                console.error("App init error:", err);
+                isInitialDataLoaded = true;
+                renderGrid();
+                hideLoadingOverlay();
+            }
         }
 
         window.onload = function() {
