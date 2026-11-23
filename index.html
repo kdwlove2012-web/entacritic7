@@ -60,19 +60,6 @@
 </head>
 <body class="min-h-screen flex flex-col bg-white text-zinc-900 antialiased">
 
-    <!-- CLOUD SYNC WARNING BANNER (로컬 모드 또는 클라우드 오류 시 표시) -->
-    <div id="syncStatusBanner" class="hidden bg-amber-50 border-b border-amber-200 text-amber-900 text-xs">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-between gap-2">
-            <div class="flex items-center gap-2 font-bold">
-                <i id="syncBannerIcon" class="fa-solid fa-triangle-exclamation text-amber-600"></i>
-                <span id="syncBannerText">현재 로컬 전용 모드로 실행 중입니다. 내 브라우저에 올린 작품만 보이며 다른 사용자와 공유되지 않습니다.</span>
-            </div>
-            <button type="button" onclick="openCloudGuideModal()" class="bg-amber-900 hover:bg-black text-white text-[11px] font-extrabold px-3 py-1 rounded transition whitespace-nowrap">
-                연동 상태 / 해결 방법 보기
-            </button>
-        </div>
-    </div>
-
     <!-- HEADER (Metacritic Black Top Navigation) -->
     <header class="bg-black text-white sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -98,8 +85,8 @@
                     </nav>
                 </div>
 
-                <!-- Right Tools: White Search Bar + Cloud Status + Register + User Profile -->
-                <div class="flex items-center gap-2.5 flex-grow justify-end max-w-lg">
+                <!-- Right Tools: White Search Bar + Register + User Profile -->
+                <div class="flex items-center gap-3 flex-grow justify-end max-w-md">
                     <div class="relative hidden sm:block w-full max-w-xs">
                         <input type="text" id="searchInput" oninput="handleSearch(this.value)" onkeydown="if(event.key==='Enter'){handleSearch(this.value);}" placeholder="작품 또는 제작자 검색" 
                             class="w-full bg-white text-zinc-900 text-sm rounded-md pl-3.5 pr-9 py-2 focus:outline-none focus:ring-2 focus:ring-[#ffbd3f] placeholder:text-zinc-500">
@@ -107,13 +94,6 @@
                             <i class="fa-solid fa-magnifying-glass text-sm"></i>
                         </button>
                     </div>
-
-                    <!-- Cloud Sync Status Pill -->
-                    <button type="button" id="cloudStatusPill" onclick="openCloudGuideModal()" title="클라우드 동기화 상태 확인"
-                        class="hidden md:inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1.5 rounded-md border border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500 transition whitespace-nowrap shrink-0">
-                        <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-zinc-400"></span>
-                        <span id="cloudStatusLabel">확인 중</span>
-                    </button>
 
                     <!-- Register Project Button -->
                     <button onclick="openNewProjectModal()" class="bg-[#ffbd3f] hover:bg-yellow-400 text-black font-extrabold text-xs px-3 py-2 rounded-md transition whitespace-nowrap shrink-0">
@@ -467,61 +447,11 @@
                     <h4 class="font-black text-zinc-900 text-sm mb-3">바로가기</h4>
                     <div><a href="https://playentry.org" target="_blank" rel="noopener noreferrer" class="hover:text-black">엔트리 공식 사이트</a></div>
                     <div><button onclick="openNewProjectModal()" class="hover:text-black">새 작품 등록하기</button></div>
-                    <div><button onclick="openCloudGuideModal()" class="hover:text-black">클라우드 연동 상태 확인</button></div>
+                    <div><button onclick="resetToHome()" class="hover:text-black">메인 페이지로 이동</button></div>
                 </div>
             </div>
         </div>
     </footer>
-
-    <!-- CLOUD SYNC STATUS & SETUP GUIDE MODAL -->
-    <div id="cloudGuideModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white border border-zinc-300 w-full max-w-lg rounded-2xl p-6 shadow-2xl text-zinc-900 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4 border-b border-zinc-200 pb-3">
-                <h3 class="text-lg font-black"><i class="fa-solid fa-cloud mr-2 text-metagreen"></i>클라우드 실시간 연동 진단</h3>
-                <button type="button" onclick="closeCloudGuideModal()" class="text-zinc-400 hover:text-zinc-800"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-
-            <div class="space-y-4 text-xs leading-relaxed">
-                <div id="cloudGuideStatusBox" class="p-3.5 rounded-xl border bg-zinc-50 border-zinc-200 space-y-1">
-                    <div class="font-black text-zinc-900 text-sm" id="cloudGuideStatusTitle">상태 확인 중...</div>
-                    <p class="text-zinc-600" id="cloudGuideStatusDesc"></p>
-                    <p class="text-[11px] text-zinc-500 font-mono break-all" id="cloudGuideDebugInfo"></p>
-                </div>
-
-                <div class="space-y-2.5 text-zinc-700">
-                    <p class="font-black text-zinc-900 text-sm">다른 사람 작품까지 모두 보이게 하려면 (3단계):</p>
-                    <ol class="list-decimal list-inside space-y-2">
-                        <li>
-                            <strong>Firebase 설정값 입력:</strong>
-                            <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline font-bold">Firebase 콘솔</a>에서 웹 앱을 생성한 뒤,
-                            <code class="bg-zinc-100 px-1.5 py-0.5 rounded font-mono text-[11px]">index.html</code> 상단의 <code class="bg-zinc-100 px-1.5 py-0.5 rounded font-mono text-[11px]">firebaseConfig</code>에 <code class="bg-zinc-100 px-1 rounded">apiKey</code>, <code class="bg-zinc-100 px-1 rounded">projectId</code> 등을 채워 넣으세요.
-                        </li>
-                        <li>
-                            <strong>익명 로그인 활성화:</strong>
-                            Firebase 콘솔 → <strong>Authentication → Sign-in method</strong>에서 <strong>익명(Anonymous)</strong> 로그인을 사용 설정하세요.
-                        </li>
-                        <li>
-                            <strong>Firestore 보안 규칙 게시:</strong>
-                            <strong>Firestore Database → 규칙(Rules)</strong> 탭에 아래 규칙을 붙여넣고 게시하세요.
-                        </li>
-                    </ol>
-
-                    <pre class="bg-zinc-900 text-zinc-100 p-3 rounded-lg text-[11px] overflow-x-auto font-mono">rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /artifacts/entacritic-github-v1/public/data/{document=**} {
-      allow read, write: if request.auth != null;
-    }
-  }
-}</pre>
-                </div>
-
-                <div class="flex justify-end pt-2 border-t border-zinc-200">
-                    <button type="button" onclick="closeCloudGuideModal()" class="px-5 py-2 bg-zinc-900 text-white text-xs font-extrabold rounded-lg hover:bg-black">닫기</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- CUSTOM SYSTEM ALERT / CONFIRM MODAL -->
     <div id="customDialogModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -785,14 +715,6 @@ service cloud.firestore {
         const isFirebaseConfigured = hasValidConfigValue(firebaseConfig?.apiKey) && hasValidConfigValue(firebaseConfig?.projectId);
         let app = null, auth = null, db = null;
 
-        // 클라우드 연동 상태 추적 객체 (진단 UI 및 오류 안내용)
-        const cloudStatus = {
-            mode: 'initializing', // 'connected' | 'local' | 'error'
-            title: '연결 확인 중...',
-            detail: '',
-            lastError: ''
-        };
-
         if (isFirebaseConfigured) {
             try {
                 app = initializeApp(firebaseConfig);
@@ -800,86 +722,8 @@ service cloud.firestore {
                 db = getFirestore(app);
             } catch (err) {
                 console.error("Firebase initialization failed:", err);
-                cloudStatus.mode = 'error';
-                cloudStatus.title = 'Firebase 초기화 실패';
-                cloudStatus.detail = 'firebaseConfig 설정값에 오타가 있거나 올바르지 않습니다.';
-                cloudStatus.lastError = err?.message || String(err);
-            }
-        } else {
-            cloudStatus.mode = 'local';
-            cloudStatus.title = '로컬 전용 모드 (클라우드 미연동)';
-            cloudStatus.detail = 'firebaseConfig가 비어 있어 내 브라우저(localStorage)에만 저장됩니다. 다른 사람이 올린 작품은 보이지 않습니다.';
-        }
-
-        /**
-         * 상단 배너, 헤더 상태 표시등, 진단 모달 UI 갱신
-         */
-        function updateCloudStatusUI() {
-            const banner = document.getElementById('syncStatusBanner');
-            const bannerIcon = document.getElementById('syncBannerIcon');
-            const bannerText = document.getElementById('syncBannerText');
-            const dot = document.getElementById('cloudStatusDot');
-            const label = document.getElementById('cloudStatusLabel');
-
-            if (cloudStatus.mode === 'connected') {
-                if (banner) banner.classList.add('hidden');
-                if (dot) dot.className = 'w-2 h-2 rounded-full bg-metagreen';
-                if (label) label.textContent = '실시간 연동';
-            } else if (cloudStatus.mode === 'error') {
-                if (banner) {
-                    banner.className = 'bg-red-50 border-b border-red-200 text-red-900 text-xs';
-                    banner.classList.remove('hidden');
-                }
-                if (bannerIcon) bannerIcon.className = 'fa-solid fa-circle-exclamation text-red-600';
-                if (bannerText) bannerText.textContent = `클라우드 동기화 오류: ${cloudStatus.detail}`;
-                if (dot) dot.className = 'w-2 h-2 rounded-full bg-red-500';
-                if (label) label.textContent = '연동 오류';
-            } else {
-                if (banner) {
-                    banner.className = 'bg-amber-50 border-b border-amber-200 text-amber-900 text-xs';
-                    banner.classList.remove('hidden');
-                }
-                if (bannerIcon) bannerIcon.className = 'fa-solid fa-triangle-exclamation text-amber-600';
-                if (bannerText) bannerText.textContent = '로컬 전용 모드입니다. 내 브라우저에만 저장되며 다른 사람이 올린 작품은 보이지 않습니다.';
-                if (dot) dot.className = 'w-2 h-2 rounded-full bg-amber-400';
-                if (label) label.textContent = '로컬 모드';
-            }
-
-            // 진단 모달 내용 업데이트
-            const box = document.getElementById('cloudGuideStatusBox');
-            const titleEl = document.getElementById('cloudGuideStatusTitle');
-            const descEl = document.getElementById('cloudGuideStatusDesc');
-            const debugEl = document.getElementById('cloudGuideDebugInfo');
-
-            if (titleEl) titleEl.textContent = cloudStatus.title;
-            if (descEl) descEl.textContent = cloudStatus.detail;
-            if (box) {
-                if (cloudStatus.mode === 'connected') {
-                    box.className = 'p-3.5 rounded-xl border bg-emerald-50 border-emerald-200 space-y-1';
-                } else if (cloudStatus.mode === 'error') {
-                    box.className = 'p-3.5 rounded-xl border bg-red-50 border-red-200 space-y-1';
-                } else {
-                    box.className = 'p-3.5 rounded-xl border bg-amber-50 border-amber-200 space-y-1';
-                }
-            }
-            if (debugEl) {
-                const uid = auth?.currentUser?.uid || '미인증';
-                const proj = firebaseConfig?.projectId || '미설정';
-                const errPart = cloudStatus.lastError ? ` | 오류: ${cloudStatus.lastError}` : '';
-                debugEl.textContent = `Project: ${proj} | AppID: ${appId} | Auth UID: ${uid}${errPart}`;
             }
         }
-
-        window.openCloudGuideModal = function() {
-            updateCloudStatusUI();
-            const modal = document.getElementById('cloudGuideModal');
-            if (modal) modal.classList.remove('hidden');
-        };
-
-        window.closeCloudGuideModal = function() {
-            const modal = document.getElementById('cloudGuideModal');
-            if (modal) modal.classList.add('hidden');
-        };
 
         // =========================================================================
         // SECURITY & SANITIZATION UTILITIES
@@ -1635,7 +1479,7 @@ service cloud.firestore {
         }
 
         /**
-         * Firebase 익명 로그인 초기화 (오류 발생 시 사용자에게 명확히 상태 표시)
+         * Firebase 익명 로그인 초기화
          */
         async function initAuth() {
             if (!auth) return false;
@@ -1648,11 +1492,6 @@ service cloud.firestore {
                 return true;
             } catch (err) {
                 console.error("Auth initialization failed:", err);
-                cloudStatus.mode = 'error';
-                cloudStatus.title = 'Firebase 익명 로그인 실패';
-                cloudStatus.detail = 'Firebase 콘솔 → Authentication → Sign-in method에서 익명(Anonymous) 로그인을 활성화해 주세요.';
-                cloudStatus.lastError = err?.code || err?.message || String(err);
-                updateCloudStatusUI();
                 return false;
             }
         }
@@ -1694,10 +1533,7 @@ service cloud.firestore {
          */
         function listenToRealtimeData() {
             renderGrid();
-            if (!db) {
-                updateCloudStatusUI();
-                return;
-            }
+            if (!db) return;
 
             try {
                 const projectsRef = collection(db, 'artifacts', appId, 'public', 'data', 'projects');
@@ -1708,14 +1544,6 @@ service cloud.firestore {
                     });
                     dbProjects = cloudProjects;
                     saveProjectsToLocalBackup();
-
-                    // 실시간 연동 성공 상태 갱신
-                    cloudStatus.mode = 'connected';
-                    cloudStatus.title = '클라우드 실시간 동기화 중';
-                    cloudStatus.detail = `Firebase Firestore에 정상 연결되어 모든 사용자의 작품(${cloudProjects.length}개)이 실시간 공유됩니다.`;
-                    cloudStatus.lastError = '';
-                    updateCloudStatusUI();
-
                     renderGrid();
 
                     const searchPage = document.getElementById('searchPage');
@@ -1732,19 +1560,9 @@ service cloud.firestore {
                     }
                 }, (error) => {
                     console.error("Cloud projects sync error:", error);
-                    cloudStatus.mode = 'error';
-                    cloudStatus.title = 'Firestore 읽기 권한 오류';
-                    cloudStatus.detail = 'Firestore 보안 규칙(Rules) 또는 익명 로그인 설정을 확인해 주세요.';
-                    cloudStatus.lastError = error?.code || error?.message || String(error);
-                    updateCloudStatusUI();
                 });
             } catch (e) {
                 console.error("Cloud listener setup error:", e);
-                cloudStatus.mode = 'error';
-                cloudStatus.title = '클라우드 구독 초기화 실패';
-                cloudStatus.detail = 'Firebase 설정을 확인해 주세요.';
-                cloudStatus.lastError = e?.message || String(e);
-                updateCloudStatusUI();
             }
         }
 
@@ -3207,7 +3025,6 @@ service cloud.firestore {
         async function startApp() {
             await initDeviceIdentity();
             loadFromLocalBackup();
-            updateCloudStatusUI();
 
             if (isFirebaseConfigured && auth) {
                 await initAuth();
