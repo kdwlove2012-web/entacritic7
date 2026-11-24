@@ -47,91 +47,142 @@
         .score-green { background-color: #00ce7a; color: #000000; }
         .score-yellow { background-color: #ffbd3f; color: #000000; }
         .score-red { background-color: #FF6874; color: #ffffff; }
-        .score-none { background-color: #d4d4d8; color: #121212; }
+        .score-none { background-color: #ffffff; color: #18181b; border: 2px solid #d4d4d8; }
 
         .bg-score-green { background-color: #00ce7a; }
         .bg-score-yellow { background-color: #ffbd3f; }
         .bg-score-red { background-color: #FF6874; }
-        .bg-score-none { background-color: #d4d4d8; }
+        .bg-score-none { background-color: #e4e4e7; }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Loading Screen Animations */
-        @keyframes entaProgressSlide {
-            0% { transform: translateX(-100%); }
-            50% { transform: translateX(0%); }
-            100% { transform: translateX(100%); }
+        /* Metacritic-style Entascore Breakdown Gradient Banner */
+        .entascorer-banner {
+            background: linear-gradient(108deg, #00ce7a 0%, #37c962 32%, #a2c144 66%, #e28b26 100%);
         }
-        .enta-loading-bar {
-            animation: entaProgressSlide 1.4s ease-in-out infinite;
+
+        /* Header Mega Dropdown (JS Controlled to prevent sticky hover after click) */
+        .nav-dropdown-group.is-open .nav-dropdown-panel {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            pointer-events: auto;
         }
-        @keyframes entaLogoPulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 189, 63, 0.35); }
-            50% { transform: scale(1.05); box-shadow: 0 0 24px 4px rgba(255, 189, 63, 0.25); }
-        }
-        .enta-logo-pulse {
-            animation: entaLogoPulse 1.8s ease-in-out infinite;
+
+        /* Smooth Touch Momentum Scrolling on Mobile */
+        .touch-scroll-x {
+            -webkit-overflow-scrolling: touch;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col bg-white text-zinc-900 antialiased">
+<body class="min-h-screen flex flex-col bg-white text-zinc-900 antialiased overflow-x-hidden">
 
-    <!-- INITIAL LOADING SCREEN OVERLAY -->
-    <div id="appLoadingOverlay" class="fixed inset-0 z-50 bg-black text-white flex flex-col items-center justify-center p-6 transition-opacity duration-500">
-        <div class="flex flex-col items-center max-w-xs w-full text-center space-y-6">
-            <!-- Brand Logo -->
-            <div class="flex flex-col items-center gap-3">
-                <div class="enta-logo-pulse w-16 h-16 rounded-full border-[4px] border-[#ffbd3f] bg-black flex items-center justify-center">
-                    <span class="text-white font-black text-4xl tracking-tighter transform -rotate-12 leading-none">E</span>
-                </div>
-                <span class="text-3xl font-black tracking-tight text-white lowercase">entacritic</span>
-            </div>
-
-            <!-- 3-Color Metacritic Animated Progress Bar -->
-            <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden relative">
-                <div class="enta-loading-bar absolute inset-0 flex w-full h-full">
-                    <div class="w-1/3 bg-metagreen"></div>
-                    <div class="w-1/3 bg-metayellow"></div>
-                    <div class="w-1/3 bg-metared"></div>
-                </div>
-            </div>
-
-            <!-- Dynamic Loading Status Message -->
-            <div class="space-y-1.5">
-                <p id="loadingStatusText" class="text-sm font-bold text-zinc-200">엔트리 작품 데이터를 불러오는 중...</p>
-                <p class="text-[11px] text-zinc-500">잠시만 기다려 주세요. 실시간 평점을 동기화하고 있습니다.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- HEADER (Metacritic Black Top Navigation) -->
-    <header class="bg-black text-white sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16 gap-3">
+    <!-- HEADER (Metacritic Black Top Navigation + Category Dropdowns + Mobile Drawer) -->
+    <header class="bg-black text-white sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-14 sm:h-16 gap-2 sm:gap-3">
                 
-                <!-- Logo & Category Navigation -->
-                <div class="flex items-center gap-6 lg:gap-8 shrink-0">
-                    <div onclick="resetToHome()" class="flex items-center gap-2.5 cursor-pointer select-none">
-                        <div class="w-9 h-9 rounded-full border-[3px] border-[#ffbd3f] bg-black flex items-center justify-center">
-                            <span class="text-white font-black text-xl tracking-tighter transform -rotate-12 leading-none">E</span>
+                <!-- Left: Mobile Hamburger + Logo + Desktop Category Navigation -->
+                <div class="flex items-center gap-2.5 sm:gap-5 lg:gap-7 shrink-0">
+                    <!-- Mobile Hamburger Menu Button -->
+                    <button type="button" id="mobileMenuToggleBtn" onclick="toggleMobileDrawer()" aria-label="전체 메뉴 열기" aria-expanded="false" class="lg:hidden w-9 h-9 -ml-1 rounded-lg text-white hover:bg-zinc-900 flex items-center justify-center transition">
+                        <i id="mobileMenuIcon" class="fa-solid fa-bars text-lg"></i>
+                    </button>
+
+                    <div onclick="resetToHome()" class="flex items-center gap-2 sm:gap-2.5 cursor-pointer select-none">
+                        <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-[3px] border-[#ffbd3f] bg-black flex items-center justify-center shrink-0">
+                            <span class="text-white font-black text-lg sm:text-xl tracking-tighter transform -rotate-12 leading-none">E</span>
                         </div>
-                        <span class="text-2xl font-black tracking-tight text-white lowercase">entacritic</span>
+                        <span class="text-xl sm:text-2xl font-black tracking-tight text-white lowercase">entacritic</span>
                     </div>
 
-                    <!-- Category Navigation -->
-                    <nav class="hidden lg:flex items-center space-x-5 text-[13px] font-bold text-white">
-                        <button onclick="filterCategory('게임')" class="nav-cat-btn hover:text-[#ffbd3f] transition" data-cat="게임">게임</button>
-                        <button onclick="filterCategory('생활과 도구')" class="nav-cat-btn hover:text-[#ffbd3f] transition" data-cat="생활과 도구">생활과 도구</button>
-                        <button onclick="filterCategory('스토리텔링')" class="nav-cat-btn hover:text-[#ffbd3f] transition" data-cat="스토리텔링">스토리텔링</button>
-                        <button onclick="filterCategory('예술')" class="nav-cat-btn hover:text-[#ffbd3f] transition" data-cat="예술">예술</button>
-                        <button onclick="filterCategory('지식 공유')" class="nav-cat-btn hover:text-[#ffbd3f] transition" data-cat="지식 공유">지식 공유</button>
-                        <button onclick="filterCategory('기타')" class="nav-cat-btn hover:text-[#ffbd3f] transition" data-cat="기타">기타</button>
+                    <!-- Desktop Category Navigation with Hover Dropdowns -->
+                    <nav class="hidden lg:flex items-center space-x-1 text-[13px] font-bold text-white">
+                        <!-- 게임 -->
+                        <div class="nav-dropdown-group relative" data-nav-dropdown>
+                            <button type="button" onclick="handleNavCategorySelect('게임')" class="nav-cat-btn px-3 py-2 rounded-md hover:bg-zinc-900 hover:text-[#ffbd3f] transition" data-cat="게임">게임</button>
+                            <div class="nav-dropdown-panel opacity-0 invisible pointer-events-none translate-y-1 transition-all duration-150 absolute left-0 top-full pt-2 w-60 z-50">
+                                <div class="bg-white text-zinc-900 rounded-xl shadow-2xl border border-zinc-200 p-4 space-y-2.5 text-xs">
+                                    <div class="font-black text-zinc-900 pb-1.5 border-b border-zinc-200">게임 탐색</div>
+                                    <button type="button" onclick="handleNavCategorySelect('게임', 'latest')" class="block w-full text-left font-medium text-zinc-600 hover:text-black">최신 등록 게임</button>
+                                    <button type="button" onclick="handleNavCategorySelect('게임', 'highest')" class="block w-full text-left font-medium text-zinc-600 hover:text-black">최고 평점 게임</button>
+                                    <button type="button" onclick="handleNavCategorySelect('게임', 'reviews')" class="block w-full text-left font-medium text-zinc-600 hover:text-black">리뷰가 많은 게임</button>
+                                    <button type="button" onclick="handleNavCategorySelect('게임')" class="block w-full text-left font-black text-zinc-900 pt-1">전체 게임 보기 →</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 생활과 도구 -->
+                        <div class="nav-dropdown-group relative" data-nav-dropdown>
+                            <button type="button" onclick="handleNavCategorySelect('생활과 도구')" class="nav-cat-btn px-3 py-2 rounded-md hover:bg-zinc-900 hover:text-[#ffbd3f] transition" data-cat="생활과 도구">생활과 도구</button>
+                            <div class="nav-dropdown-panel opacity-0 invisible pointer-events-none translate-y-1 transition-all duration-150 absolute left-0 top-full pt-2 w-60 z-50">
+                                <div class="bg-white text-zinc-900 rounded-xl shadow-2xl border border-zinc-200 p-4 space-y-2.5 text-xs">
+                                    <div class="font-black text-zinc-900 pb-1.5 border-b border-zinc-200">생활과 도구 탐색</div>
+                                    <button type="button" onclick="handleNavCategorySelect('생활과 도구', 'latest')" class="block w-full text-left font-medium text-zinc-600 hover:text-black">최신 등록 도구</button>
+                                    <button type="button" onclick="handleNavCategorySelect('생활과 도구', 'highest')" class="block w-full text-left font-medium text-zinc-600 hover:text-black">최고 평점 도구</button>
+                                    <button type="button" onclick="handleNavCategorySelect('생활과 도구', 'reviews')" class="block w-full text-left font-medium text-zinc-600 hover:text-black">리뷰가 많은 도구</button>
+                                    <button type="button" onclick="handleNavCategorySelect('생활과 도구')" class="block w-full text-left font-black text-zinc-900 pt-1">전체 보기 →</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 스토리텔링 -->
+                        <div class="nav-dropdown-group relative" data-nav-dropdown>
+                            <button type="button" onclick="handleNavCategorySelect('스토리텔링')" class="nav-cat-btn px-3 py-2 rounded-md hover:bg-zinc-900 hover:text-[#ffbd3f] transition" data-cat="스토리텔링">스토리텔링</button>
+                            <div class="nav-dropdown-panel opacity-0 invisible pointer-events-none translate-y-1 transition-all duration-150 absolute left-0 top-full pt-2 w-60 z-50">
+                                <div class="bg-white text-zinc-900 rounded-xl shadow-2xl border border-zinc-200 p-4 space-y-2.5 text-xs">
+                                    <div class="font-black text-zinc-900 pb-1.5 border-b border-zinc-200">스토리텔링 탐색</div>
+                                    <button type="button" onclick="handleNavCategorySelect('스토리텔링', 'latest')" class="block w-full text-left font-medium text-zinc-600 hover:text-black">최신 스토리 작품</button>
+                                    <button type="button" onclick="handleNavCategorySelect('스토리텔링', 'highest')" class="block w-full text-left font-medium text-zinc-600 hover:text-black">최고 평점 스토리</button>
+                                    <button type="button" onclick="handleNavCategorySelect('스토리텔링')" class="block w-full text-left font-black text-zinc-900 pt-1">전체 보기 →</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 예술 -->
+                        <div class="nav-dropdown-group relative" data-nav-dropdown>
+                            <button type="button" onclick="handleNavCategorySelect('예술')" class="nav-cat-btn px-3 py-2 rounded-md hover:bg-zinc-900 hover:text-[#ffbd3f] transition" data-cat="예술">예술</button>
+                            <div class="nav-dropdown-panel opacity-0 invisible pointer-events-none translate-y-1 transition-all duration-150 absolute left-0 top-full pt-2 w-56 z-50">
+                                <div class="bg-white text-zinc-900 rounded-xl shadow-2xl border border-zinc-200 p-4 space-y-2.5 text-xs">
+                                    <div class="font-black text-zinc-900 pb-1.5 border-b border-zinc-200">예술 작품 탐색</div>
+                                    <button type="button" onclick="handleNavCategorySelect('예술', 'latest')" class="block w-full text-left font-medium text-zinc-600 hover:text-black">최신 예술 작품</button>
+                                    <button type="button" onclick="handleNavCategorySelect('예술', 'highest')" class="block w-full text-left font-medium text-zinc-600 hover:text-black">최고 평점 작품</button>
+                                    <button type="button" onclick="handleNavCategorySelect('예술')" class="block w-full text-left font-black text-zinc-900 pt-1">전체 보기 →</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 지식 공유 -->
+                        <div class="nav-dropdown-group relative" data-nav-dropdown>
+                            <button type="button" onclick="handleNavCategorySelect('지식 공유')" class="nav-cat-btn px-3 py-2 rounded-md hover:bg-zinc-900 hover:text-[#ffbd3f] transition" data-cat="지식 공유">지식 공유</button>
+                            <div class="nav-dropdown-panel opacity-0 invisible pointer-events-none translate-y-1 transition-all duration-150 absolute left-0 top-full pt-2 w-56 z-50">
+                                <div class="bg-white text-zinc-900 rounded-xl shadow-2xl border border-zinc-200 p-4 space-y-2.5 text-xs">
+                                    <div class="font-black text-zinc-900 pb-1.5 border-b border-zinc-200">지식 공유 탐색</div>
+                                    <button type="button" onclick="handleNavCategorySelect('지식 공유', 'latest')" class="block w-full text-left font-medium text-zinc-600 hover:text-black">최신 지식 작품</button>
+                                    <button type="button" onclick="handleNavCategorySelect('지식 공유', 'highest')" class="block w-full text-left font-medium text-zinc-600 hover:text-black">최고 평점 작품</button>
+                                    <button type="button" onclick="handleNavCategorySelect('지식 공유')" class="block w-full text-left font-black text-zinc-900 pt-1">전체 보기 →</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 기타 -->
+                        <div class="nav-dropdown-group relative" data-nav-dropdown>
+                            <button type="button" onclick="handleNavCategorySelect('기타')" class="nav-cat-btn px-3 py-2 rounded-md hover:bg-zinc-900 hover:text-[#ffbd3f] transition" data-cat="기타">기타</button>
+                            <div class="nav-dropdown-panel opacity-0 invisible pointer-events-none translate-y-1 transition-all duration-150 absolute right-0 top-full pt-2 w-56 z-50">
+                                <div class="bg-white text-zinc-900 rounded-xl shadow-2xl border border-zinc-200 p-4 space-y-2.5 text-xs">
+                                    <div class="font-black text-zinc-900 pb-1.5 border-b border-zinc-200">기타 작품 탐색</div>
+                                    <button type="button" onclick="handleNavCategorySelect('기타', 'latest')" class="block w-full text-left font-medium text-zinc-600 hover:text-black">최신 등록 작품</button>
+                                    <button type="button" onclick="handleNavCategorySelect('기타', 'highest')" class="block w-full text-left font-medium text-zinc-600 hover:text-black">최고 평점 작품</button>
+                                    <button type="button" onclick="handleNavCategorySelect('기타')" class="block w-full text-left font-black text-zinc-900 pt-1">전체 보기 →</button>
+                                </div>
+                            </div>
+                        </div>
                     </nav>
                 </div>
 
-                <!-- Right Tools: White Search Bar + Register + User Profile -->
-                <div class="flex items-center gap-3 flex-grow justify-end max-w-md">
+                <!-- Right Tools: White Rounded Search Bar + Register + User Profile -->
+                <div class="flex items-center gap-2 sm:gap-3 flex-grow justify-end max-w-md">
                     <div class="relative hidden sm:block w-full max-w-xs">
                         <input type="text" id="searchInput" oninput="handleSearch(this.value)" onkeydown="if(event.key==='Enter'){handleSearch(this.value);}" placeholder="작품 또는 제작자 검색" 
                             class="w-full bg-white text-zinc-900 text-sm rounded-md pl-3.5 pr-9 py-2 focus:outline-none focus:ring-2 focus:ring-[#ffbd3f] placeholder:text-zinc-500">
@@ -141,7 +192,7 @@
                     </div>
 
                     <!-- Register Project Button -->
-                    <button onclick="openNewProjectModal()" class="bg-[#ffbd3f] hover:bg-yellow-400 text-black font-extrabold text-xs px-3 py-2 rounded-md transition whitespace-nowrap shrink-0">
+                    <button onclick="openNewProjectModal()" class="bg-[#ffbd3f] hover:bg-yellow-400 active:scale-[0.98] text-black font-extrabold text-[11px] sm:text-xs px-2.5 sm:px-3 py-2 rounded-md transition whitespace-nowrap shrink-0">
                         작품 등록
                     </button>
 
@@ -151,58 +202,163 @@
             </div>
         </div>
 
-        <!-- Mobile Search Bar (sm 미만 화면에서만 표시) -->
-        <div class="sm:hidden px-4 pb-2.5">
+        <!-- Mobile Search Bar (sm 미만 스마트폰 화면 전용) -->
+        <div class="sm:hidden px-3.5 pb-2.5">
             <div class="relative w-full">
-                <input type="text" id="mobileSearchInput" oninput="handleSearch(this.value)" onkeydown="if(event.key==='Enter'){handleSearch(this.value);}" placeholder="작품 또는 제작자 검색" 
-                    class="w-full bg-white text-zinc-900 text-xs rounded-md pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-[#ffbd3f] placeholder:text-zinc-500">
-                <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-zinc-700 text-xs"></i>
+                <input type="text" id="mobileSearchInput" oninput="handleSearch(this.value)" onkeydown="if(event.key==='Enter'){handleSearch(this.value); this.blur();}" placeholder="엔트리 작품 또는 제작자 검색" 
+                    class="w-full bg-white text-zinc-900 text-xs rounded-lg pl-3.5 pr-9 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#ffbd3f] placeholder:text-zinc-500">
+                <button type="button" onclick="handleSearch(document.getElementById('mobileSearchInput').value)" aria-label="검색" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-700 p-1">
+                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </button>
             </div>
         </div>
 
-        <!-- Mobile / Tablet Categories -->
-        <div class="lg:hidden flex items-center gap-2 overflow-x-auto no-scrollbar px-4 py-2 border-t border-zinc-800 text-xs font-bold">
-            <button onclick="filterCategory('전체')" class="bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-1 rounded-full whitespace-nowrap">전체</button>
-            <button onclick="filterCategory('게임')" class="bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-1 rounded-full whitespace-nowrap">게임</button>
-            <button onclick="filterCategory('생활과 도구')" class="bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-1 rounded-full whitespace-nowrap">생활과 도구</button>
-            <button onclick="filterCategory('스토리텔링')" class="bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-1 rounded-full whitespace-nowrap">스토리텔링</button>
-            <button onclick="filterCategory('예술')" class="bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-1 rounded-full whitespace-nowrap">예술</button>
-            <button onclick="filterCategory('지식 공유')" class="bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-1 rounded-full whitespace-nowrap">지식 공유</button>
-            <button onclick="filterCategory('기타')" class="bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-1 rounded-full whitespace-nowrap">기타</button>
+        <!-- Mobile / Tablet Quick Category Strip -->
+        <div class="lg:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar touch-scroll-x px-3.5 py-2 border-t border-zinc-800 text-xs font-bold">
+            <button onclick="resetToHome()" class="mobile-cat-pill bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-1.5 rounded-full whitespace-nowrap transition" data-cat="전체">홈</button>
+            <button onclick="openCategoryHub('게임')" class="mobile-cat-pill bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-1.5 rounded-full whitespace-nowrap transition" data-cat="게임">게임</button>
+            <button onclick="openCategoryHub('생활과 도구')" class="mobile-cat-pill bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-1.5 rounded-full whitespace-nowrap transition" data-cat="생활과 도구">생활과 도구</button>
+            <button onclick="openCategoryHub('스토리텔링')" class="mobile-cat-pill bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-1.5 rounded-full whitespace-nowrap transition" data-cat="스토리텔링">스토리텔링</button>
+            <button onclick="openCategoryHub('예술')" class="mobile-cat-pill bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-1.5 rounded-full whitespace-nowrap transition" data-cat="예술">예술</button>
+            <button onclick="openCategoryHub('지식 공유')" class="mobile-cat-pill bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-1.5 rounded-full whitespace-nowrap transition" data-cat="지식 공유">지식 공유</button>
+            <button onclick="openCategoryHub('기타')" class="mobile-cat-pill bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-1.5 rounded-full whitespace-nowrap transition" data-cat="기타">기타</button>
         </div>
     </header>
+
+    <!-- MOBILE SLIDE-OVER NAVIGATION DRAWER (Smartphone Menu) -->
+    <div id="mobileNavBackdrop" onclick="closeMobileDrawer()" class="fixed inset-0 bg-black/65 backdrop-blur-xs z-50 hidden lg:hidden"></div>
+    <aside id="mobileNavDrawer" aria-label="모바일 전체 메뉴" class="fixed inset-y-0 left-0 w-[82%] max-w-xs bg-zinc-950 text-white z-50 transform -translate-x-full transition-transform duration-250 ease-out flex flex-col justify-between lg:hidden border-r border-zinc-800 shadow-2xl">
+        <div class="overflow-y-auto p-5 space-y-6">
+            <!-- Drawer Top Brand & Close -->
+            <div class="flex items-center justify-between border-b border-zinc-800 pb-4">
+                <div onclick="resetToHome(); closeMobileDrawer();" class="flex items-center gap-2.5 cursor-pointer select-none">
+                    <div class="w-8 h-8 rounded-full border-[3px] border-[#ffbd3f] bg-black flex items-center justify-center">
+                        <span class="text-white font-black text-lg tracking-tighter transform -rotate-12 leading-none">E</span>
+                    </div>
+                    <span class="text-xl font-black tracking-tight text-white lowercase">entacritic</span>
+                </div>
+                <button type="button" onclick="closeMobileDrawer()" aria-label="메뉴 닫기" class="w-9 h-9 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+
+            <!-- Drawer Account Summary -->
+            <div id="mobileDrawerAccountBox" class="bg-zinc-900 border border-zinc-800 rounded-xl p-3.5"></div>
+
+            <!-- Drawer Categories -->
+            <div class="space-y-1.5">
+                <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-widest px-2 pb-1">카테고리 탐색</div>
+                <div id="mobileDrawerCategoryList" class="space-y-1"></div>
+            </div>
+
+            <!-- Drawer Quick Shortcuts -->
+            <div class="space-y-1.5 pt-2 border-t border-zinc-800">
+                <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-widest px-2 pb-1">빠른 정렬 보기</div>
+                <button type="button" onclick="resetToHome(); handleSortChange('highest'); closeMobileDrawer(); document.getElementById('archiveSection')?.scrollIntoView({behavior:'smooth'});" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold text-zinc-200 hover:bg-zinc-900">
+                    <span><i class="fa-solid fa-trophy text-[#ffbd3f] mr-2"></i>최고 평점 작품 순위</span>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-zinc-500"></i>
+                </button>
+                <button type="button" onclick="resetToHome(); handleSortChange('reviews'); closeMobileDrawer(); document.getElementById('archiveSection')?.scrollIntoView({behavior:'smooth'});" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold text-zinc-200 hover:bg-zinc-900">
+                    <span><i class="fa-solid fa-comments text-metagreen mr-2"></i>리뷰가 많은 화제작</span>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-zinc-500"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Drawer Bottom CTA -->
+        <div class="p-4 border-t border-zinc-800 bg-black space-y-2">
+            <button type="button" onclick="closeMobileDrawer(); openNewProjectModal();" class="w-full bg-[#ffbd3f] hover:bg-yellow-400 text-black font-extrabold text-xs py-3 rounded-lg transition">
+                <i class="fa-solid fa-plus mr-1.5"></i>새 엔트리 작품 등록하기
+            </button>
+        </div>
+    </aside>
 
     <!-- MAIN BODY -->
     <main class="flex-grow bg-white">
         
-        <!-- HOME PAGE (Metacritic Home Layout) -->
-        <section id="homePage" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+        <!-- HOME PAGE (Metacritic Full Editorial Home Layout) -->
+        <section id="homePage" class="space-y-10 sm:space-y-14 pb-8">
             
-            <!-- SECTION 1: New and Notable (Horizontal Carousel) -->
-            <div>
-                <div class="flex items-center justify-between gap-4 mb-5">
+            <!-- SECTION 1: New and Notable (4-Card Featured Carousel) -->
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
+                <div class="flex items-center justify-between gap-4 mb-4 sm:mb-5">
                     <div class="flex-grow border-b border-zinc-900 pb-2">
-                        <h2 class="text-xl sm:text-2xl font-black tracking-tight text-zinc-900">최신 및 주목할 작품</h2>
+                        <h2 class="text-lg sm:text-2xl font-black tracking-tight text-zinc-900">최신 및 주목할 작품</h2>
                     </div>
                     <div class="flex items-center gap-2 shrink-0 pb-1">
-                        <button type="button" onclick="scrollNotableCarousel(-1)" aria-label="이전" class="w-8 h-8 rounded-full border border-zinc-300 hover:border-zinc-900 text-zinc-600 hover:text-zinc-900 flex items-center justify-center transition">
+                        <button type="button" onclick="scrollCarousel('notableCarousel', -1)" aria-label="이전" class="w-8 h-8 rounded-full border border-zinc-300 hover:border-zinc-900 text-zinc-500 hover:text-zinc-900 flex items-center justify-center transition">
                             <i class="fa-solid fa-arrow-left text-xs"></i>
                         </button>
-                        <button type="button" onclick="scrollNotableCarousel(1)" aria-label="다음" class="w-8 h-8 rounded-full border border-zinc-900 hover:bg-zinc-900 text-zinc-900 hover:text-white flex items-center justify-center transition">
+                        <button type="button" onclick="scrollCarousel('notableCarousel', 1)" aria-label="다음" class="w-8 h-8 rounded-full border border-zinc-900 hover:bg-zinc-900 text-zinc-900 hover:text-white flex items-center justify-center transition">
                             <i class="fa-solid fa-arrow-right text-xs"></i>
                         </button>
                     </div>
                 </div>
 
-                <!-- Horizontal Scroll Container -->
-                <div id="notableCarousel" class="flex gap-5 overflow-x-auto no-scrollbar pb-2 scroll-smooth"></div>
+                <!-- Horizontal Scroll Container with Snap -->
+                <div id="notableCarousel" class="flex gap-4 sm:gap-5 overflow-x-auto no-scrollbar touch-scroll-x snap-x snap-mandatory pb-2 scroll-smooth"></div>
             </div>
 
-            <!-- SECTION 2: All Projects Archive (Filter & Full Grid) -->
-            <div>
+            <!-- SECTION 2: Trending Projects This Week (Compact Cards + Quick Play Button) -->
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between gap-4 mb-4 sm:mb-5">
+                    <div class="flex-grow border-b border-zinc-900 pb-2 flex items-baseline gap-3">
+                        <h2 class="text-lg sm:text-2xl font-black tracking-tight text-zinc-900">지금 주목받는 인기 작품</h2>
+                        <span class="hidden sm:inline text-[11px] font-bold text-zinc-400 uppercase tracking-wider">TRENDING ON ENTRY</span>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0 pb-1">
+                        <button type="button" onclick="scrollCarousel('trendingCarousel', -1)" aria-label="이전" class="w-8 h-8 rounded-full border border-zinc-300 hover:border-zinc-900 text-zinc-500 hover:text-zinc-900 flex items-center justify-center transition">
+                            <i class="fa-solid fa-arrow-left text-xs"></i>
+                        </button>
+                        <button type="button" onclick="scrollCarousel('trendingCarousel', 1)" aria-label="다음" class="w-8 h-8 rounded-full border border-zinc-900 hover:bg-zinc-900 text-zinc-900 hover:text-white flex items-center justify-center transition">
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="trendingCarousel" class="flex gap-3.5 sm:gap-4 overflow-x-auto no-scrollbar touch-scroll-x snap-x snap-mandatory pb-2 scroll-smooth"></div>
+            </div>
+
+            <!-- SECTION 3: Category Carousels (Games, Tools, Storytelling, Art...) -->
+            <div id="categoryRowsContainer" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-12"></div>
+
+            <!-- SECTION 4: Entascore Breakdown Gradient Banner -->
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="entascorer-banner rounded-2xl p-6 sm:p-8 text-white shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                    <div class="space-y-2 max-w-xl">
+                        <div class="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest bg-black/20 px-3 py-1 rounded-full">
+                            <span>entacritic</span>
+                            <span>·</span>
+                            <span>ENTASCORE 기준</span>
+                        </div>
+                        <h3 class="text-2xl sm:text-3xl font-black tracking-tight">엔트리 작품 평가의 공정한 기준</h3>
+                        <p class="text-xs sm:text-sm text-white/90 font-medium leading-relaxed">
+                            사용자 리뷰 점수를 종합하여 0~100점의 Entascore를 산출합니다. 기기당 1회 평가 원칙과 자동 도배·테러 필터링으로 신뢰할 수 있는 평점을 제공합니다.
+                        </p>
+                    </div>
+                    <div class="bg-white text-zinc-900 rounded-xl p-4 sm:p-5 w-full md:w-80 shrink-0 shadow-lg space-y-2.5 text-xs">
+                        <div class="font-black text-sm border-b border-zinc-200 pb-2">점수 구간 안내</div>
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-zinc-700">전반적인 호평</span>
+                            <span class="meta-badge score-green px-2.5 py-0.5 text-xs">75 – 100</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-zinc-700">혼합적 또는 평범함</span>
+                            <span class="meta-badge score-yellow px-2.5 py-0.5 text-xs">50 – 74</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-zinc-700">전반적인 비호평</span>
+                            <span class="meta-badge score-red px-2.5 py-0.5 text-xs">0 – 49</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 5: All Projects Archive (Filter & Full Grid) -->
+            <div id="archiveSection" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-zinc-900 pb-2.5 mb-5">
-                    <div class="flex items-center gap-3">
-                        <h1 class="text-xl sm:text-2xl font-black tracking-tight text-zinc-900">엔트리 작품 아카이브</h1>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <h2 class="text-lg sm:text-2xl font-black tracking-tight text-zinc-900">엔트리 작품 아카이브</h2>
                         <span id="categoryLabel" class="text-xs font-bold bg-zinc-100 border border-zinc-300 text-zinc-700 px-2.5 py-0.5 rounded">
                             카테고리: 전체
                         </span>
@@ -220,7 +376,7 @@
                 </div>
 
                 <!-- Category Filter Pills -->
-                <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-4 mb-2">
+                <div class="flex items-center gap-2 overflow-x-auto no-scrollbar touch-scroll-x pb-4 mb-2">
                     <button onclick="filterCategory('전체')" class="home-cat-pill bg-white border border-zinc-300 hover:border-zinc-900 text-zinc-800 text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap transition" data-cat="전체">전체</button>
                     <button onclick="filterCategory('게임')" class="home-cat-pill bg-white border border-zinc-300 hover:border-zinc-900 text-zinc-800 text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap transition" data-cat="게임">게임</button>
                     <button onclick="filterCategory('생활과 도구')" class="home-cat-pill bg-white border border-zinc-300 hover:border-zinc-900 text-zinc-800 text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap transition" data-cat="생활과 도구">생활과 도구</button>
@@ -230,8 +386,73 @@
                     <button onclick="filterCategory('기타')" class="home-cat-pill bg-white border border-zinc-300 hover:border-zinc-900 text-zinc-800 text-xs font-bold px-3.5 py-1.5 rounded-md whitespace-nowrap transition" data-cat="기타">기타</button>
                 </div>
 
-                <!-- Grid -->
+                <!-- Full Grid -->
                 <div id="projectsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"></div>
+            </div>
+        </section>
+
+        <!-- CATEGORY HUB PAGE (Metacritic Dedicated Category Page, e.g. GAMES) -->
+        <section id="categoryHubPage" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-10 sm:space-y-12">
+            <!-- Big Colored Category Header -->
+            <div class="space-y-2 pb-2">
+                <div class="flex items-center justify-between">
+                    <button type="button" onclick="resetToHome()" class="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-900 py-1 transition">
+                        <i class="fa-solid fa-arrow-left"></i> 홈으로 돌아가기
+                    </button>
+                    <span id="categoryHubCount" class="text-xs font-bold text-zinc-500">총 0개 작품</span>
+                </div>
+                <h1 id="categoryHubTitle" class="text-3xl sm:text-5xl font-black tracking-tight text-[#f97316]">게임</h1>
+                <p id="categoryHubSubtitle" class="text-xs sm:text-base text-zinc-600 font-medium">엔트리의 주목할 작품을 만나보세요.</p>
+            </div>
+
+            <!-- Row 1: New Releases in Category -->
+            <div>
+                <div class="flex items-center justify-between gap-4 mb-4 sm:mb-5">
+                    <div class="flex-grow border-b border-zinc-900 pb-2">
+                        <h2 class="text-base sm:text-xl font-black tracking-tight text-zinc-900">최신 등록 작품</h2>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0 pb-1">
+                        <button type="button" onclick="scrollCarousel('categoryHubLatest', -1)" aria-label="이전" class="w-8 h-8 rounded-full border border-zinc-300 hover:border-zinc-900 text-zinc-500 hover:text-zinc-900 flex items-center justify-center transition">
+                            <i class="fa-solid fa-arrow-left text-xs"></i>
+                        </button>
+                        <button type="button" onclick="scrollCarousel('categoryHubLatest', 1)" aria-label="다음" class="w-8 h-8 rounded-full border border-zinc-900 hover:bg-zinc-900 text-zinc-900 hover:text-white flex items-center justify-center transition">
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="categoryHubLatest" class="flex gap-3.5 sm:gap-4 overflow-x-auto no-scrollbar touch-scroll-x snap-x snap-mandatory pb-2 scroll-smooth"></div>
+            </div>
+
+            <!-- Row 2: Highest Rated in Category -->
+            <div>
+                <div class="flex items-center justify-between gap-4 mb-4 sm:mb-5">
+                    <div class="flex-grow border-b border-zinc-900 pb-2">
+                        <h2 class="text-base sm:text-xl font-black tracking-tight text-zinc-900">최고 평점 작품</h2>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0 pb-1">
+                        <button type="button" onclick="scrollCarousel('categoryHubTop', -1)" aria-label="이전" class="w-8 h-8 rounded-full border border-zinc-300 hover:border-zinc-900 text-zinc-500 hover:text-zinc-900 flex items-center justify-center transition">
+                            <i class="fa-solid fa-arrow-left text-xs"></i>
+                        </button>
+                        <button type="button" onclick="scrollCarousel('categoryHubTop', 1)" aria-label="다음" class="w-8 h-8 rounded-full border border-zinc-900 hover:bg-zinc-900 text-zinc-900 hover:text-white flex items-center justify-center transition">
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="categoryHubTop" class="flex gap-3.5 sm:gap-4 overflow-x-auto no-scrollbar touch-scroll-x snap-x snap-mandatory pb-2 scroll-smooth"></div>
+            </div>
+
+            <!-- Row 3: All Category Projects Grid -->
+            <div>
+                <div class="flex items-end justify-between gap-3 border-b border-zinc-900 pb-2.5 mb-5">
+                    <h2 class="text-lg sm:text-xl font-black tracking-tight text-zinc-900">전체 목록</h2>
+                    <select id="categoryHubSort" onchange="handleSortChange(this.value)" class="bg-white border border-zinc-300 text-zinc-800 text-xs font-bold rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-zinc-900">
+                        <option value="latest">최신 등록순</option>
+                        <option value="highest">평점 높은순</option>
+                        <option value="lowest">평점 낮은순</option>
+                        <option value="reviews">리뷰 많은순</option>
+                    </select>
+                </div>
+                <div id="categoryHubGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"></div>
             </div>
         </section>
 
@@ -265,14 +486,16 @@
 
         <!-- DETAIL PAGE (Metacritic Product Detail Layout) -->
         <section id="detailPage" class="hidden bg-white">
-            <!-- Top Colored Banner Strip -->
+            <!-- Top Colored Banner Strip with Breadcrumb -->
             <div id="detailTopBanner" class="bg-score-none transition-colors duration-300">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-24 flex items-center justify-between text-xs font-bold">
-                    <button onclick="showHomePage()" class="inline-flex items-center gap-1.5 bg-black/15 hover:bg-black/25 text-current px-3 py-1.5 rounded-md transition">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-24 flex flex-wrap items-center justify-between gap-2 text-xs font-bold">
+                    <button onclick="goBackFromDetail()" class="inline-flex items-center gap-1.5 bg-black/15 hover:bg-black/25 text-current px-3 py-1.5 rounded-md transition">
                         <i class="fa-solid fa-arrow-left"></i> 목록으로 돌아가기
                     </button>
-                    <div class="flex items-center gap-1.5 opacity-90">
-                        <span id="detailBannerCategory">기타</span>
+                    <div class="flex items-center gap-1.5 opacity-90 text-[11px] sm:text-xs">
+                        <button type="button" onclick="resetToHome()" class="hover:underline">홈</button>
+                        <span>&gt;</span>
+                        <button type="button" id="detailBannerCategory" onclick="openCategoryHub(this.textContent)" class="hover:underline">기타</button>
                         <span>·</span>
                         <span id="detailBannerAuthor">-</span>
                     </div>
@@ -283,7 +506,7 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20">
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                     
-                    <!-- LEFT COLUMN: Main Thumbnail + Summary -->
+                    <!-- LEFT COLUMN: Main Thumbnail + Summary + Platform Card -->
                     <div class="lg:col-span-7 xl:col-span-8 space-y-6">
                         <div class="rounded-lg overflow-hidden bg-black aspect-video relative group shadow-lg border border-black/10">
                             <img id="detailImage" src="" alt="" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/800x450/18181b/ffffff?text=Entacritic'">
@@ -297,11 +520,12 @@
                             <div class="md:col-span-8 space-y-3">
                                 <h3 class="text-sm font-black text-zinc-900">작품 소개</h3>
                                 <p id="detailSummary" class="text-sm text-zinc-700 leading-relaxed whitespace-pre-line">설명이 없습니다.</p>
-                                <div class="pt-1">
+                                <div class="pt-1 flex items-center gap-2">
                                     <span id="detailCategory" class="inline-block text-xs bg-zinc-800 text-white px-2.5 py-1 rounded font-bold">기타</span>
+                                    <span class="inline-block text-xs bg-zinc-100 border border-zinc-300 text-zinc-700 px-2.5 py-1 rounded font-bold">전체 이용가</span>
                                 </div>
                             </div>
-                            <div class="md:col-span-4 text-xs text-zinc-700 space-y-2 md:pt-7">
+                            <div class="md:col-span-4 text-xs text-zinc-700 space-y-2.5 md:pt-7">
                                 <div class="flex items-center flex-wrap gap-1.5">
                                     <span class="font-black text-zinc-900">제작자: </span>
                                     <span id="detailDeveloper" class="underline decoration-zinc-400">-</span>
@@ -315,10 +539,26 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Platform Summary Card (Metacritic "All Platforms" style) -->
+                        <div class="space-y-3">
+                            <h3 class="text-base font-black text-zinc-900 border-b border-zinc-900 pb-2">플랫폼 평점</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="bg-[#f4f4f4] border border-zinc-200 rounded-lg p-4 flex items-center justify-between gap-4">
+                                    <div class="space-y-1">
+                                        <div class="flex items-center gap-1.5 font-black text-sm text-zinc-900">
+                                            <i class="fa-solid fa-cube text-metagreen"></i> Entry Web
+                                        </div>
+                                        <div id="detailPlatformReviewCount" class="text-xs text-zinc-500">0개의 사용자 리뷰 기준</div>
+                                    </div>
+                                    <div id="detailPlatformScoreBadge" class="meta-badge score-none w-12 h-12 text-lg font-black rounded-lg">tbd</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- RIGHT COLUMN: Metacritic White Score Sidebar -->
-                    <div class="lg:col-span-5 xl:col-span-4 bg-white rounded-t-xl lg:p-6 pt-4 space-y-5">
+                    <div class="lg:col-span-5 xl:col-span-4 bg-white rounded-xl lg:shadow-sm lg:border lg:border-zinc-200/80 p-5 sm:p-6 space-y-5">
                         <!-- Title & Release Date -->
                         <div class="space-y-2">
                             <h1 id="detailTitle" class="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight leading-tight">작품 제목</h1>
@@ -343,7 +583,7 @@
                                     <div id="detailMetascoreText" class="text-sm font-black text-zinc-900 mt-0.5">평가 없음</div>
                                     <div id="detailMetascoreSub" class="text-xs text-zinc-500 underline decoration-zinc-300">0개의 평가를 바탕으로</div>
                                 </div>
-                                <div id="detailMetascoreBadge" class="meta-badge score-none w-14 h-14 text-2xl font-black">?</div>
+                                <div id="detailMetascoreBadge" class="meta-badge score-none w-14 h-14 text-xl font-black">tbd</div>
                             </div>
                             <div class="h-1.5 w-full bg-zinc-200 rounded-full flex gap-0.5 overflow-hidden">
                                 <div id="heroMetaPos" class="bg-metagreen h-full transition-all duration-500" style="width: 0%"></div>
@@ -362,7 +602,7 @@
                                     <div id="detailUserScoreText" class="text-sm font-black text-zinc-900 mt-0.5">평가 없음</div>
                                     <div id="detailUserScoreSub" class="text-xs text-zinc-500 underline decoration-zinc-300">0개의 사용자 리뷰</div>
                                 </div>
-                                <div id="detailUserScoreBadge" class="meta-badge score-none w-14 h-14 text-2xl font-black rounded-full">?</div>
+                                <div id="detailUserScoreBadge" class="meta-badge score-none w-14 h-14 text-xl font-black rounded-full">tbd</div>
                             </div>
                             <div class="h-1.5 w-full bg-zinc-200 rounded-full flex gap-0.5 overflow-hidden">
                                 <div id="heroUserPos" class="bg-metagreen h-full transition-all duration-500" style="width: 0%"></div>
@@ -380,7 +620,7 @@
                                     <div class="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">MY SCORE</div>
                                     <div id="detailMyScoreStatus" class="text-sm font-black text-zinc-900 mt-0.5">로그인 후 평가 가능</div>
                                 </div>
-                                <div id="detailMyScoreBadge" class="meta-badge score-none w-12 h-12 text-lg font-black rounded-full">?</div>
+                                <div id="detailMyScoreBadge" class="meta-badge score-none w-12 h-12 text-sm font-black rounded-full">tbd</div>
                             </div>
                             <div id="myScoreSegments" class="grid grid-cols-10 gap-1"></div>
                             <button id="writeReviewBtn" type="button" onclick="openWriteReviewModal()" class="w-full border border-zinc-400 hover:border-zinc-900 hover:bg-zinc-50 text-zinc-900 font-bold text-xs py-2.5 rounded-md transition">
@@ -390,11 +630,14 @@
 
                         <hr class="border-zinc-200">
 
-                        <!-- Play & Owner Actions -->
+                        <!-- Play & Owner Actions (Metacritic "Where to Buy" dark pill button style) -->
                         <div class="space-y-2.5">
                             <div class="text-sm font-black text-zinc-900">작품 실행</div>
                             <a id="detailEntryBtn" href="#" target="_blank" rel="noopener noreferrer" class="w-full bg-zinc-800 hover:bg-black text-white font-bold text-xs px-4 py-3 rounded-md flex items-center justify-between transition">
-                                <span class="flex items-center gap-2"><i class="fa-solid fa-play text-metagreen"></i> 엔트리에서 작품 실행하기</span>
+                                <span class="flex items-center gap-2.5">
+                                    <span class="bg-white/10 px-2 py-0.5 rounded text-[11px] font-black text-metagreen">Entry</span>
+                                    <span>엔트리에서 바로 실행하기</span>
+                                </span>
                                 <i class="fa-solid fa-arrow-up-right-from-square text-[11px] text-zinc-400"></i>
                             </a>
                             <button id="deleteProjectBtn" type="button" onclick="executeDeleteProject(event)" class="hidden w-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-md transition">
@@ -406,9 +649,9 @@
             </div>
 
             <!-- REVIEWS SECTION (Metacritic Reviews Layout) -->
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-6">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 space-y-6">
                 <div class="flex items-baseline gap-3 border-b-2 border-zinc-900 pb-2.5">
-                    <h2 class="text-xl sm:text-2xl font-black text-zinc-900">사용자 리뷰</h2>
+                    <h2 class="text-lg sm:text-2xl font-black text-zinc-900">사용자 리뷰</h2>
                     <span id="detailReviewsTotalLabel" class="text-xs font-bold text-zinc-500 uppercase">전체 0개</span>
                 </div>
 
@@ -420,7 +663,7 @@
                             <div id="detailMetascoreStatus" class="text-lg font-black text-zinc-900 mt-0.5">평가 없음</div>
                             <div id="detailBreakdownSub" class="text-xs text-zinc-500">0개의 사용자 리뷰</div>
                         </div>
-                        <div id="detailBreakdownScoreBadge" class="meta-badge score-none w-16 h-16 text-2xl font-black rounded-xl">?</div>
+                        <div id="detailBreakdownScoreBadge" class="meta-badge score-none w-16 h-16 text-xl font-black rounded-xl">tbd</div>
                     </div>
 
                     <div class="md:col-span-7 space-y-3">
@@ -461,7 +704,7 @@
     </main>
 
     <!-- FOOTER (Metacritic 3-Color Top Bar + Centered Brand Footer) -->
-    <footer class="bg-white border-t border-zinc-200 mt-16">
+    <footer class="bg-white border-t border-zinc-200 mt-14">
         <div class="h-1.5 w-full flex">
             <div class="w-1/3 bg-metagreen"></div>
             <div class="w-1/3 bg-metayellow"></div>
@@ -476,24 +719,28 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 text-xs text-zinc-600">
-                <div class="space-y-2">
+                <div class="space-y-2.5">
                     <h4 class="font-black text-zinc-900 text-sm mb-3">카테고리</h4>
-                    <div><button onclick="filterCategory('게임')" class="hover:text-black">게임</button></div>
-                    <div><button onclick="filterCategory('생활과 도구')" class="hover:text-black">생활과 도구</button></div>
-                    <div><button onclick="filterCategory('스토리텔링')" class="hover:text-black">스토리텔링</button></div>
-                    <div><button onclick="filterCategory('예술')" class="hover:text-black">예술</button></div>
+                    <div><button onclick="openCategoryHub('게임')" class="hover:text-black">게임</button></div>
+                    <div><button onclick="openCategoryHub('생활과 도구')" class="hover:text-black">생활과 도구</button></div>
+                    <div><button onclick="openCategoryHub('스토리텔링')" class="hover:text-black">스토리텔링</button></div>
+                    <div><button onclick="openCategoryHub('예술')" class="hover:text-black">예술</button></div>
+                    <div><button onclick="openCategoryHub('지식 공유')" class="hover:text-black">지식 공유</button></div>
                 </div>
-                <div class="space-y-2">
+                <div class="space-y-2.5">
                     <h4 class="font-black text-zinc-900 text-sm mb-3">Entacritic</h4>
                     <p class="text-zinc-500 leading-relaxed">엔트리 작품 평점 및<br>사용자 리뷰 커뮤니티 아카이브</p>
                     <p class="text-[11px] text-zinc-400 pt-2">기기당 1회 평가 · 도배/테러 자동 방지</p>
                 </div>
-                <div class="space-y-2">
+                <div class="space-y-2.5">
                     <h4 class="font-black text-zinc-900 text-sm mb-3">바로가기</h4>
                     <div><a href="https://playentry.org" target="_blank" rel="noopener noreferrer" class="hover:text-black">엔트리 공식 사이트</a></div>
                     <div><button onclick="openNewProjectModal()" class="hover:text-black">새 작품 등록하기</button></div>
                     <div><button onclick="resetToHome()" class="hover:text-black">메인 페이지로 이동</button></div>
                 </div>
+            </div>
+            <div class="pt-4 border-t border-zinc-100 text-[11px] text-zinc-400">
+                © Entacritic · Entry Community Review Archive
             </div>
         </div>
     </footer>
@@ -511,11 +758,11 @@
     </div>
 
     <!-- LOGIN MODAL WITH PASSWORD -->
-    <div id="loginModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
-        <div class="bg-white border border-zinc-300 w-full max-w-sm rounded-2xl p-6 shadow-2xl text-zinc-900">
+    <div id="loginModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white border border-zinc-300 w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl text-zinc-900 max-h-[92vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4 border-b border-zinc-200 pb-3">
                 <h3 class="text-lg font-black"><i class="fa-solid fa-user-lock mr-2 text-metagreen"></i>로그인 / 회원가입</h3>
-                <button type="button" onclick="closeLoginModal()" class="text-zinc-400 hover:text-zinc-800"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <button type="button" onclick="closeLoginModal()" class="text-zinc-400 hover:text-zinc-800 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             
             <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="space-y-4">
@@ -534,18 +781,18 @@
 
                 <div class="flex justify-end gap-2 pt-2 border-t border-zinc-200">
                     <button type="button" onclick="closeLoginModal()" class="px-4 py-2 bg-zinc-200 text-zinc-700 text-xs font-bold rounded-lg hover:bg-zinc-300">취소</button>
-                    <button type="submit" class="px-5 py-2 bg-metagreen text-black text-xs font-extrabold rounded-lg hover:bg-emerald-400">로그인 / 가입</button>
+                    <button id="loginSubmitBtn" type="submit" class="px-5 py-2 bg-metagreen text-black text-xs font-extrabold rounded-lg hover:bg-emerald-400 disabled:opacity-60">로그인 / 가입</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- WRITE REVIEW MODAL -->
-    <div id="writeReviewModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
-        <div class="bg-white border border-zinc-300 w-full max-w-lg rounded-2xl p-6 shadow-2xl text-zinc-900">
+    <div id="writeReviewModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white border border-zinc-300 w-full max-w-lg rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl text-zinc-900 max-h-[92vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4 border-b border-zinc-200 pb-3">
                 <h3 class="text-lg font-black">작품 평가 및 리뷰 작성</h3>
-                <button type="button" onclick="closeWriteReviewModal()" class="text-zinc-400 hover:text-zinc-800"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <button type="button" onclick="closeWriteReviewModal()" class="text-zinc-400 hover:text-zinc-800 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             
             <form id="reviewForm" onsubmit="submitReview(event)" class="space-y-4">
@@ -583,11 +830,11 @@
     </div>
 
     <!-- NEW PROJECT MODAL -->
-    <div id="newProjectModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
-        <div class="bg-white border border-zinc-300 w-full max-w-lg rounded-2xl p-6 shadow-2xl text-zinc-900 max-h-[90vh] overflow-y-auto">
+    <div id="newProjectModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white border border-zinc-300 w-full max-w-lg rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl text-zinc-900 max-h-[92vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4 border-b border-zinc-200 pb-3">
                 <h3 class="text-lg font-black">새 엔트리 작품 등록</h3>
-                <button type="button" onclick="closeNewProjectModal()" class="text-zinc-400 hover:text-zinc-800"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <button type="button" onclick="closeNewProjectModal()" class="text-zinc-400 hover:text-zinc-800 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             
             <form id="newProjectForm" onsubmit="submitNewProject(event)" class="space-y-4">
@@ -646,11 +893,11 @@
     </div>
 
     <!-- EDIT AUTHOR MODAL -->
-    <div id="editAuthorModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
-        <div class="bg-white border border-zinc-300 w-full max-w-sm rounded-2xl p-6 shadow-2xl text-zinc-900">
+    <div id="editAuthorModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white border border-zinc-300 w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl text-zinc-900 max-h-[92vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4 border-b border-zinc-200 pb-3">
                 <h3 class="text-lg font-black"><i class="fa-solid fa-pen-to-square mr-2 text-metagreen"></i>제작자 이름 변경</h3>
-                <button type="button" onclick="closeEditAuthorModal()" class="text-zinc-400 hover:text-zinc-800"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <button type="button" onclick="closeEditAuthorModal()" class="text-zinc-400 hover:text-zinc-800 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             
             <form id="editAuthorForm" onsubmit="submitEditAuthor(event)" class="space-y-4">
@@ -669,11 +916,11 @@
     </div>
 
     <!-- REPORT MODAL -->
-    <div id="reportModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
-        <div class="bg-white border border-zinc-300 w-full max-w-md rounded-2xl p-6 shadow-2xl text-zinc-900">
+    <div id="reportModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white border border-zinc-300 w-full max-w-md rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl text-zinc-900 max-h-[92vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4 border-b border-zinc-200 pb-3">
                 <h3 class="text-lg font-black">리뷰 신고</h3>
-                <button type="button" onclick="closeReportModal()" class="text-zinc-400 hover:text-zinc-800"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <button type="button" onclick="closeReportModal()" class="text-zinc-400 hover:text-zinc-800 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
 
             <form id="reportForm" onsubmit="submitReportToAI(event)" class="space-y-4">
@@ -728,14 +975,12 @@
             updateDoc,
             deleteDoc,
             onSnapshot,
-            arrayUnion
+            arrayUnion,
+            runTransaction
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // =========================================================================
         // [Firebase 클라우드 실시간 연동 설정]
-        // 다른 사람이 올린 작품까지 모든 사용자와 실시간으로 공유하려면,
-        // Firebase 콘솔(https://console.firebase.google.com)에서 웹 앱을 생성하고
-        // 아래 firebaseConfig에 발급받은 설정값을 채워 넣으세요.
         // =========================================================================
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'entacritic-github-v1';
         const firebaseConfig = typeof __firebase_config !== 'undefined' 
@@ -859,7 +1104,7 @@
         }
 
         /**
-         * 비밀번호 SHA-256 해시 생성 (닉네임 솔트 포함)
+         * 비밀번호 SHA-256 해시 생성 (닉네임 솔트 포함, 비-HTTPS 폴백 포함)
          */
         function fallbackSha256(ascii) {
             const rightRotate = (value, amount) => (value >>> amount) | (value << (32 - amount));
@@ -958,7 +1203,7 @@
         // ENTAGUARD AI MODERATOR BOT (Gemini 3 Flash Preview + Local Fallback)
         // =========================================================================
         const GEMINI_MODEL = 'gemini-3-flash-preview';
-        const geminiApiKey = ""; // 필요 시 Gemini API 키 입력 (미입력 시 로컬 가드로 자동 동작)
+        const geminiApiKey = ""; // 필요 시 프록시 서버 또는 API 키 연동 (미입력 시 로컬 가드 동작)
 
         const AI_MODERATION_SYSTEM_PROMPT = `
 당신은 엔트리(Entry) 작품 평점 커뮤니티 'Entacritic'의 공정한 AI 관리봇 'EntaGuard'입니다.
@@ -966,14 +1211,14 @@
 
 [판정 기준]
 1. LEGITIMATE (정상 리뷰 - 반드시 보호):
-   - 점수가 0~50점으로 낮거나 부정적·비판적인 의견이더라도, 작품에 대한 정당한 감상이나 비평이라면 무조건 LEGITIMATE로 판정하세요.
-   - 짧은 감상이라도 의미가 통하면 정상 리뷰입니다.
+  - 점수가 0~50점으로 낮거나 부정적·비판적인 의견이더라도, 작품에 대한 정당한 감상이나 비평이라면 무조건 LEGITIMATE로 판정하세요.
+  - 짧은 감상이라도 의미가 통하면 정상 리뷰입니다.
 
 2. VIOLATION (차단·블라인드 대상):
-   - 욕설, 비속어, 패드립, 인신공격, 혐오 표현 (초성 욕설이나 띄어쓰기/숫자/특수문자로 우회한 욕설 포함)
-   - 의미 없는 키보드 난타, 자음/모음 나열, 동일 문자/단어 반복 도배
-   - 외부 사이트 홍보, 스팸, 피싱, 도박/불법 광고
-   - 작품 평가와 전혀 무관한 악의적 테러·협박 문구
+  - 욕설, 비속어, 패드립, 인신공격, 혐오 표현 (초성 욕설이나 띄어쓰기/숫자/특수문자로 우회한 욕설 포함)
+  - 의미 없는 키보드 난타, 자음/모음 나열, 동일 문자/단어 반복 도배
+  - 외부 사이트 홍보, 스팸, 피싱, 도박/불법 광고
+  - 작품 평가와 전혀 무관한 악의적 테러·협박 문구
 
 반드시 지정된 JSON 스키마로만 응답하고, reason은 사용자가 납득할 수 있도록 정중한 한국어 1~2문장으로 작성하세요.
 `.trim();
@@ -1417,27 +1662,18 @@
         let currentProjectId = null;
         let uploadedImageDataUrl = null;
         let isInitialDataLoaded = false;
+        let activeCategoryHub = null;
+        let lastMainView = 'home'; // 'home' | 'category' | 'search'
+        const categoryRowTabs = {}; // 카테고리별 홈 캐러셀 탭 상태 ('latest' | 'highest' | 'reviews')
 
-        /**
-         * 로딩 화면 상태 문구 업데이트
-         */
-        function updateLoadingText(text) {
-            const el = document.getElementById('loadingStatusText');
-            if (el && text) el.textContent = text;
-        }
-
-        /**
-         * 로딩 화면 부드럽게 닫기
-         */
-        function hideLoadingOverlay() {
-            const overlay = document.getElementById('appLoadingOverlay');
-            if (!overlay || overlay.dataset.hidden === 'true') return;
-            overlay.dataset.hidden = 'true';
-            overlay.classList.add('opacity-0', 'pointer-events-none');
-            setTimeout(() => {
-                overlay.classList.add('hidden');
-            }, 500);
-        }
+        const CATEGORY_HUB_META = {
+            '게임': { colorClass: 'text-[#f97316]', subtitle: '엔트리 창작자들이 만든 최신·인기 게임을 탐색해 보세요.' },
+            '생활과 도구': { colorClass: 'text-[#0284c7]', subtitle: '일상과 학습에 유용한 엔트리 유틸리티 및 도구 모음입니다.' },
+            '스토리텔링': { colorClass: 'text-[#7c3aed]', subtitle: '흥미진진한 이야기와 애니메이션 작품을 만나보세요.' },
+            '예술': { colorClass: 'text-[#db2777]', subtitle: '독창적인 그래픽과 음악, 인터랙티브 예술 작품 아카이브입니다.' },
+            '지식 공유': { colorClass: 'text-[#059669]', subtitle: '배움과 정보가 담긴 엔트리 교육·지식 공유 작품입니다.' },
+            '기타': { colorClass: 'text-zinc-800', subtitle: '다양한 장르와 실험적인 엔트리 작품을 모아봤습니다.' }
+        };
 
         function loadSession() {
             try {
@@ -1602,21 +1838,12 @@
             if (!db) {
                 isInitialDataLoaded = true;
                 renderGrid();
-                hideLoadingOverlay();
                 return;
             }
-
-            renderGrid();
-
-            // 네트워크가 매우 느릴 경우에도 5초 후에는 화면이 열리도록 안전장치 설정
-            const fallbackTimer = setTimeout(() => {
-                hideLoadingOverlay();
-            }, 5000);
 
             try {
                 const projectsRef = collection(db, 'artifacts', appId, 'public', 'data', 'projects');
                 onSnapshot(projectsRef, (snapshot) => {
-                    clearTimeout(fallbackTimer);
                     const cloudProjects = [];
                     snapshot.forEach(docSnap => {
                         cloudProjects.push({ id: docSnap.id, ...docSnap.data() });
@@ -1625,33 +1852,33 @@
                     isInitialDataLoaded = true;
                     saveProjectsToLocalBackup();
                     renderGrid();
-                    hideLoadingOverlay();
 
                     const searchPage = document.getElementById('searchPage');
                     if (searchQuery.trim() && searchPage && !searchPage.classList.contains('hidden')) {
                         renderSearchResults();
                     }
+                    const hubPage = document.getElementById('categoryHubPage');
+                    if (activeCategoryHub && hubPage && !hubPage.classList.contains('hidden')) {
+                        renderCategoryHub(activeCategoryHub);
+                    }
                     if (currentProjectId) {
                         const stillExists = dbProjects.some(p => p.id === currentProjectId);
                         if (stillExists) {
-                            showDetailPage(currentProjectId);
+                            // 현재 보고 있는 필터와 스크롤 위치를 유지한 채 데이터만 제자리 갱신
+                            showDetailPage(currentProjectId, { resetFilter: false, scrollToTop: false });
                         } else {
                             showHomePage();
                         }
                     }
                 }, (error) => {
-                    clearTimeout(fallbackTimer);
                     isInitialDataLoaded = true;
                     console.error("Cloud projects sync error:", error);
                     renderGrid();
-                    hideLoadingOverlay();
                 });
             } catch (e) {
-                clearTimeout(fallbackTimer);
                 isInitialDataLoaded = true;
                 console.error("Cloud listener setup error:", e);
                 renderGrid();
-                hideLoadingOverlay();
             }
         }
 
@@ -1673,86 +1900,94 @@
             e.preventDefault();
             const nicknameInput = document.getElementById('loginNicknameInput');
             const passwordInput = document.getElementById('loginPasswordInput');
+            const loginBtn = document.getElementById('loginSubmitBtn');
             if (!nicknameInput || !passwordInput) return;
 
-            const nickname = nicknameInput.value.trim();
-            const password = passwordInput.value;
+            if (loginBtn && loginBtn.disabled) return;
+            if (loginBtn) loginBtn.disabled = true;
 
-            if (!nickname || !password.trim()) {
-                await showMessage('닉네임과 비밀번호를 모두 입력해주세요.');
-                return;
-            }
+            try {
+                const nickname = nicknameInput.value.trim();
+                const password = passwordInput.value;
 
-            const nickCheck = validateTextSecurity(nickname, {
-                minLen: 1,
-                maxLen: 30,
-                blockLinks: false,
-                allowRepetitive: true,
-                fieldName: '닉네임'
-            });
-            if (!nickCheck.valid) {
-                await showMessage(nickCheck.reason, '닉네임 오류');
-                return;
-            }
+                if (!nickname || !password.trim()) {
+                    await showMessage('닉네임과 비밀번호를 모두 입력해주세요.');
+                    return;
+                }
 
-            const passwordHash = await hashPassword(nickname, password);
-            let handledByCloud = false;
+                const nickCheck = validateTextSecurity(nickname, {
+                    minLen: 1,
+                    maxLen: 30,
+                    blockLinks: false,
+                    allowRepetitive: true,
+                    fieldName: '닉네임'
+                });
+                if (!nickCheck.valid) {
+                    await showMessage(nickCheck.reason, '닉네임 오류');
+                    return;
+                }
 
-            if (db) {
-                try {
-                    const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', getUserDocId(nickname));
-                    const userSnap = await getDoc(userDocRef);
-                    if (userSnap.exists()) {
-                        const userData = userSnap.data();
-                        let matched = false;
-                        if (userData.passwordHash) {
-                            matched = userData.passwordHash === passwordHash;
-                        } else if (userData.password) {
-                            matched = userData.password === password;
-                            if (matched) {
-                                await setDoc(userDocRef, { nickname, passwordHash, password: null }, { merge: true });
+                const passwordHash = await hashPassword(nickname, password);
+                let handledByCloud = false;
+
+                if (db) {
+                    try {
+                        const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', getUserDocId(nickname));
+                        const userSnap = await getDoc(userDocRef);
+                        if (userSnap.exists()) {
+                            const userData = userSnap.data();
+                            let matched = false;
+                            if (userData.passwordHash) {
+                                matched = userData.passwordHash === passwordHash;
+                            } else if (userData.password) {
+                                matched = userData.password === password;
+                                if (matched) {
+                                    await setDoc(userDocRef, { nickname, passwordHash, password: null }, { merge: true });
+                                }
                             }
+                            if (!matched) {
+                                await showMessage('비밀번호가 일치하지 않습니다!\n올바른 비밀번호를 입력해 주세요.', '로그인 실패');
+                                return;
+                            }
+                        } else {
+                            await setDoc(userDocRef, {
+                                nickname: nickname,
+                                passwordHash: passwordHash,
+                                createdAt: Date.now()
+                            });
                         }
-                        if (!matched) {
+                        handledByCloud = true;
+                    } catch (err) {
+                        console.error("Cloud login error:", err);
+                        await showMessage(
+                            `클라우드 로그인 서버에 연결하지 못했습니다.\n(오류: ${err?.code || err?.message})\n\nFirebase 익명 로그인 및 Firestore 보안 규칙을 확인해 주세요.`,
+                            '클라우드 인증 오류'
+                        );
+                        return;
+                    }
+                }
+
+                if (!handledByCloud) {
+                    if (localUsers[nickname]) {
+                        if (localUsers[nickname] !== passwordHash) {
                             await showMessage('비밀번호가 일치하지 않습니다!\n올바른 비밀번호를 입력해 주세요.', '로그인 실패');
                             return;
                         }
                     } else {
-                        await setDoc(userDocRef, {
-                            nickname: nickname,
-                            passwordHash: passwordHash,
-                            createdAt: Date.now()
-                        });
+                        localUsers[nickname] = passwordHash;
+                        saveLocalUsersBackup();
                     }
-                    handledByCloud = true;
-                } catch (err) {
-                    console.error("Cloud login error:", err);
-                    await showMessage(
-                        `클라우드 로그인 서버에 연결하지 못했습니다.\n(오류: ${err?.code || err?.message})\n\nFirebase 익명 로그인 및 Firestore 보안 규칙을 확인해 주세요.`,
-                        '클라우드 인증 오류'
-                    );
-                    return;
                 }
-            }
 
-            if (!handledByCloud) {
-                if (localUsers[nickname]) {
-                    if (localUsers[nickname] !== passwordHash) {
-                        await showMessage('비밀번호가 일치하지 않습니다!\n올바른 비밀번호를 입력해 주세요.', '로그인 실패');
-                        return;
-                    }
-                } else {
-                    localUsers[nickname] = passwordHash;
-                    saveLocalUsersBackup();
+                saveSession({ nickname, authHash: passwordHash });
+                renderUserAccountUI();
+                closeLoginModal();
+
+                if (currentProjectId) {
+                    showDetailPage(currentProjectId, { resetFilter: false, scrollToTop: false });
                 }
-            }
-
-            saveSession({ nickname, authHash: passwordHash });
-            renderUserAccountUI();
-            closeLoginModal();
-
-            if (currentProjectId) {
-                showDetailPage(currentProjectId);
+            } finally {
+                if (loginBtn) loginBtn.disabled = false;
             }
         }
         window.handleLoginSubmit = handleLoginSubmit;
@@ -1761,37 +1996,73 @@
             saveSession(null);
             renderUserAccountUI();
             if (currentProjectId) {
-                showDetailPage(currentProjectId);
+                showDetailPage(currentProjectId, { resetFilter: false, scrollToTop: false });
             }
         }
         window.handleLogout = handleLogout;
 
         function renderUserAccountUI() {
             const container = document.getElementById('userAccountContainer');
-            if (!container) return;
+            const drawerAccountBox = document.getElementById('mobileDrawerAccountBox');
 
-            if (currentUser) {
-                container.innerHTML = `
-                    <div class="flex items-center gap-2 bg-zinc-900 px-3 py-1.5 rounded-full border border-zinc-700">
-                        <i class="fa-solid fa-circle-user text-[#ffbd3f] text-sm"></i>
-                        <span class="text-xs font-bold text-white max-w-[90px] truncate">${escapeHtml(currentUser)}</span>
-                        <button type="button" onclick="handleLogout()" class="text-[10px] text-zinc-400 hover:text-red-400 font-semibold ml-0.5 whitespace-nowrap">로그아웃</button>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = `
-                    <button type="button" onclick="openLoginModal()" title="로그인 / 회원가입" class="flex items-center gap-1.5 text-white hover:text-[#ffbd3f] transition px-2 py-1.5 rounded-full border border-zinc-700 hover:border-[#ffbd3f]">
-                        <i class="fa-regular fa-circle-user text-lg leading-none"></i>
-                        <span class="hidden md:inline text-xs font-bold">로그인</span>
-                    </button>
-                `;
+            if (container) {
+                if (currentUser) {
+                    container.innerHTML = `
+                        <div class="flex items-center gap-1.5 sm:gap-2 bg-zinc-900 px-2.5 sm:px-3 py-1.5 rounded-full border border-zinc-700">
+                            <i class="fa-solid fa-circle-user text-[#ffbd3f] text-sm"></i>
+                            <span class="text-xs font-bold text-white max-w-[68px] sm:max-w-[90px] truncate">${escapeHtml(currentUser)}</span>
+                            <button type="button" onclick="handleLogout()" class="hidden sm:inline text-[10px] text-zinc-400 hover:text-red-400 font-semibold ml-0.5 whitespace-nowrap">로그아웃</button>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <button type="button" onclick="openLoginModal()" title="로그인 / 회원가입" class="flex items-center gap-1.5 text-white hover:text-[#ffbd3f] transition px-2 sm:px-2.5 py-1.5 rounded-full border border-zinc-700 hover:border-[#ffbd3f]">
+                            <i class="fa-regular fa-circle-user text-base sm:text-lg leading-none"></i>
+                            <span class="hidden md:inline text-xs font-bold">로그인</span>
+                        </button>
+                    `;
+                }
+            }
+
+            if (drawerAccountBox) {
+                if (currentUser) {
+                    drawerAccountBox.innerHTML = `
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <i class="fa-solid fa-circle-user text-[#ffbd3f] text-2xl shrink-0"></i>
+                                <div class="min-w-0">
+                                    <div class="text-xs font-black text-white truncate">${escapeHtml(currentUser)}</div>
+                                    <div class="text-[11px] text-zinc-400">로그인됨</div>
+                                </div>
+                            </div>
+                            <button type="button" onclick="handleLogout(); closeMobileDrawer();" class="px-2.5 py-1.5 bg-zinc-800 hover:bg-red-600 text-zinc-200 hover:text-white text-[11px] font-bold rounded-lg transition shrink-0">
+                                로그아웃
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    drawerAccountBox.innerHTML = `
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="text-xs text-zinc-300 font-bold">로그인하고 작품을 평가하세요</div>
+                            <button type="button" onclick="closeMobileDrawer(); openLoginModal();" class="px-3 py-1.5 bg-metagreen text-black text-xs font-extrabold rounded-lg shrink-0">
+                                로그인
+                            </button>
+                        </div>
+                    `;
+                }
             }
         }
         window.renderUserAccountUI = renderUserAccountUI;
 
         function handleImagePreview(e) {
-            const file = e.target.files[0];
+            const file = e.target.files && e.target.files[0];
             if (!file) return;
+
+            if (!file.type || !file.type.startsWith('image/')) {
+                e.target.value = '';
+                showMessage('이미지 파일(.png, .jpg, .webp 등)만 첨부할 수 있습니다.', '파일 형식 오류');
+                return;
+            }
 
             const reader = new FileReader();
             reader.onload = function(event) {
@@ -1815,8 +2086,9 @@
                     uploadedImageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
 
                     const preview = document.getElementById('imagePreview');
-                    preview.src = uploadedImageDataUrl;
-                    document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                    if (preview) preview.src = uploadedImageDataUrl;
+                    const container = document.getElementById('imagePreviewContainer');
+                    if (container) container.classList.remove('hidden');
                 };
                 img.src = event.target.result;
             };
@@ -1908,7 +2180,7 @@
             saveProjectsToLocalBackup();
 
             closeEditAuthorModal();
-            showDetailPage(currentProjectId);
+            showDetailPage(currentProjectId, { resetFilter: false, scrollToTop: false });
             renderGrid();
             await showMessage(`제작자 이름이 '${newAuthor}'(으)로 변경되었습니다.`);
         };
@@ -1962,11 +2234,125 @@
             }
         };
 
+        // =========================================================================
+        // HEADER DROPDOWN & MOBILE DRAWER CONTROLLERS
+        // =========================================================================
+        let suppressDropdownUntil = 0;
+
+        window.closeAllNavDropdowns = function() {
+            suppressDropdownUntil = Date.now() + 450;
+            document.querySelectorAll('[data-nav-dropdown].is-open').forEach(el => {
+                el.classList.remove('is-open');
+            });
+            if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                document.activeElement.blur();
+            }
+        };
+
+        window.handleNavCategorySelect = function(cat, sortOverride = null) {
+            closeAllNavDropdowns();
+            openCategoryHub(cat, sortOverride);
+        };
+
+        function initNavDropdowns() {
+            document.querySelectorAll('[data-nav-dropdown]').forEach(group => {
+                group.addEventListener('mouseenter', () => {
+                    if (Date.now() < suppressDropdownUntil) return;
+                    document.querySelectorAll('[data-nav-dropdown].is-open').forEach(other => {
+                        if (other !== group) other.classList.remove('is-open');
+                    });
+                    group.classList.add('is-open');
+                });
+                group.addEventListener('mouseleave', () => {
+                    group.classList.remove('is-open');
+                });
+            });
+        }
+
+        function renderMobileDrawerCategories() {
+            const listEl = document.getElementById('mobileDrawerCategoryList');
+            if (!listEl) return;
+
+            const items = [
+                { key: '전체', label: '홈 (전체 아카이브)', icon: 'fa-house', count: dbProjects.length },
+                { key: '게임', label: '게임', icon: 'fa-gamepad', count: dbProjects.filter(p => p.category === '게임').length },
+                { key: '생활과 도구', label: '생활과 도구', icon: 'fa-toolbox', count: dbProjects.filter(p => p.category === '생활과 도구').length },
+                { key: '스토리텔링', label: '스토리텔링', icon: 'fa-book-open', count: dbProjects.filter(p => p.category === '스토리텔링').length },
+                { key: '예술', label: '예술', icon: 'fa-palette', count: dbProjects.filter(p => p.category === '예술').length },
+                { key: '지식 공유', label: '지식 공유', icon: 'fa-lightbulb', count: dbProjects.filter(p => p.category === '지식 공유').length },
+                { key: '기타', label: '기타', icon: 'fa-shapes', count: dbProjects.filter(p => p.category === '기타').length }
+            ];
+
+            const currentActive = activeCategoryHub || selectedCategory;
+            listEl.innerHTML = items.map(item => {
+                const isActive = currentActive === item.key;
+                const action = item.key === '전체'
+                    ? `resetToHome(); closeMobileDrawer();`
+                    : `openCategoryHub('${item.key}'); closeMobileDrawer();`;
+                return `
+                <button type="button" onclick="${action}" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition ${isActive ? 'bg-[#ffbd3f] text-black' : 'text-zinc-200 hover:bg-zinc-900'}">
+                    <span class="flex items-center gap-2.5">
+                        <i class="fa-solid ${item.icon} w-4 text-center ${isActive ? 'text-black' : 'text-zinc-400'}"></i>
+                        <span>${escapeHtml(item.label)}</span>
+                    </span>
+                    <span class="text-[11px] px-2 py-0.5 rounded-full ${isActive ? 'bg-black/15 text-black font-black' : 'bg-zinc-800 text-zinc-400'}">${item.count}</span>
+                </button>`;
+            }).join('');
+        }
+
+        window.openMobileDrawer = function() {
+            renderMobileDrawerCategories();
+            const drawer = document.getElementById('mobileNavDrawer');
+            const backdrop = document.getElementById('mobileNavBackdrop');
+            const toggleBtn = document.getElementById('mobileMenuToggleBtn');
+            if (backdrop) backdrop.classList.remove('hidden');
+            if (drawer) drawer.classList.remove('-translate-x-full');
+            if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'true');
+            document.body.classList.add('overflow-hidden');
+        };
+
+        window.closeMobileDrawer = function() {
+            const drawer = document.getElementById('mobileNavDrawer');
+            const backdrop = document.getElementById('mobileNavBackdrop');
+            const toggleBtn = document.getElementById('mobileMenuToggleBtn');
+            if (drawer) drawer.classList.add('-translate-x-full');
+            if (backdrop) backdrop.classList.add('hidden');
+            if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+            document.body.classList.remove('overflow-hidden');
+        };
+
+        window.toggleMobileDrawer = function() {
+            const drawer = document.getElementById('mobileNavDrawer');
+            if (!drawer) return;
+            if (drawer.classList.contains('-translate-x-full')) {
+                openMobileDrawer();
+            } else {
+                closeMobileDrawer();
+            }
+        };
+
+        /**
+         * 최대 잔여법(Largest Remainder Method)으로 합계가 항상 100%가 되도록 백분율 분배
+         */
+        function distributePercentages(counts, total) {
+            if (!total || total <= 0) return counts.map(() => 0);
+            const exact = counts.map(c => (c / total) * 100);
+            const floored = exact.map(v => Math.floor(v));
+            let remainder = 100 - floored.reduce((a, b) => a + b, 0);
+            const order = exact
+                .map((v, idx) => ({ idx, frac: v - floored[idx] }))
+                .sort((a, b) => b.frac - a.frac);
+            for (let i = 0; i < remainder; i++) {
+                floored[order[i % order.length].idx] += 1;
+            }
+            return floored;
+        }
+
         function calculateStats(reviews) {
             const activeReviews = (reviews || []).filter(r => !isReviewBlinded(r));
             if (activeReviews.length === 0) {
                 return {
-                    avgScore: '?',
+                    avgScore: 'tbd',
                     rawScore: -1,
                     scoreClass: 'score-none',
                     bannerClass: 'bg-score-none text-zinc-900',
@@ -1994,9 +2380,7 @@
             });
 
             const totalCount = activeReviews.length;
-            const posPct = Math.round((pos / totalCount) * 100);
-            const mixPct = Math.round((mix / totalCount) * 100);
-            const negPct = Math.round((neg / totalCount) * 100);
+            const [posPct, mixPct, negPct] = distributePercentages([pos, mix, neg], totalCount);
 
             let scoreClass = 'score-red';
             let bannerClass = 'bg-score-red text-white';
@@ -2028,6 +2412,9 @@
             };
         }
 
+        /**
+         * Metacritic "New and Notable" 대형 추천 카드 (상단 컬러 밴드 + 회색 바디)
+         */
         function buildMetacriticCardHtml(p, isCarousel = false) {
             const stats = calculateStats(p.reviews || []);
             const safeImg = sanitizeImageUrl(p.image, 'https://placehold.co/800x450/e4e4e7/52525b?text=Entacritic');
@@ -2039,21 +2426,22 @@
                         ? 'bg-score-red'
                         : 'bg-score-none';
             const sizeClasses = isCarousel
-                ? 'w-[270px] sm:w-[285px] shrink-0'
+                ? 'w-[265px] sm:w-[292px] shrink-0 snap-start'
                 : 'w-full';
+            const badgeTextSize = stats.avgScore === 'tbd' ? 'text-sm' : 'text-xl';
 
             return `
             <div data-project-id="${escapeHtml(p.id)}" class="project-card ${sizeClasses} bg-[#f4f4f4] rounded-xl overflow-hidden hover:shadow-lg transition duration-200 cursor-pointer flex flex-col justify-between border border-zinc-200/80">
                 <div>
-                    <div class="relative pt-3 px-3">
-                        <div class="absolute inset-x-0 top-0 h-[68%] ${topColorClass}"></div>
+                    <div class="relative pt-3.5 px-3.5">
+                        <div class="absolute inset-x-0 top-0 h-[66%] ${topColorClass}"></div>
                         <div class="relative z-10 w-full aspect-video rounded-md overflow-hidden bg-zinc-900 shadow-sm">
                             <img src="${escapeHtml(safeImg)}" alt="${escapeHtml(p.title)}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/800x450/e4e4e7/52525b?text=Entacritic'">
                         </div>
                     </div>
 
                     <div class="px-4 pt-3.5 pb-4 space-y-2">
-                        <h3 class="font-extrabold text-[17px] text-zinc-900 leading-snug line-clamp-2 min-h-[2.6rem]">${escapeHtml(p.title)}</h3>
+                        <h3 class="font-extrabold text-[16px] sm:text-[17px] text-zinc-900 leading-snug line-clamp-2 min-h-[2.6rem]">${escapeHtml(p.title)}</h3>
                         <div>
                             <span class="inline-block text-[11px] bg-white border border-zinc-300 text-zinc-600 px-2 py-0.5 rounded font-semibold">
                                 ${escapeHtml(p.category)}
@@ -2062,14 +2450,14 @@
                     </div>
                 </div>
 
-                <div class="px-4 pb-4 pt-2 space-y-3">
+                <div class="px-4 pb-4 pt-2 border-t border-zinc-200/70 space-y-3">
                     <div class="flex items-end justify-between gap-2">
                         <div class="min-w-0">
                             <div class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">ENTASCORE</div>
                             <div class="text-xs font-black text-zinc-900 mt-0.5 truncate">${escapeHtml(stats.statusText)}</div>
                             <div class="text-[11px] text-zinc-500 mt-0.5">${stats.count}개의 평가를 바탕으로</div>
                         </div>
-                        <div class="meta-badge ${stats.scoreClass} w-12 h-12 text-xl font-black rounded-lg shrink-0">
+                        <div class="meta-badge ${stats.scoreClass} w-12 h-12 ${badgeTextSize} font-black rounded-lg shrink-0">
                             ${stats.avgScore}
                         </div>
                     </div>
@@ -2084,17 +2472,58 @@
             `;
         }
 
-        window.scrollNotableCarousel = function(direction) {
-            const carousel = document.getElementById('notableCarousel');
+        /**
+         * Metacritic 컴팩트 포스터 스타일 카드 (Games / Movies / Trending 행 전용)
+         */
+        function buildCompactCardHtml(p, options = {}) {
+            const { showPlayButton = false } = options;
+            const stats = calculateStats(p.reviews || []);
+            const safeImg = sanitizeImageUrl(p.image, 'https://placehold.co/640x400/e4e4e7/52525b?text=Entacritic');
+            const safeEntryUrl = sanitizeExternalUrl(p.entryUrl);
+            const miniBadgeText = stats.avgScore === 'tbd' ? 'text-[10px]' : 'text-xs';
+
+            return `
+            <div data-project-id="${escapeHtml(p.id)}" class="project-card w-[168px] sm:w-[200px] shrink-0 snap-start group cursor-pointer flex flex-col justify-between bg-white">
+                <div class="space-y-2.5">
+                    <div class="w-full aspect-[4/3] rounded-lg overflow-hidden bg-zinc-900 border border-zinc-200/90 shadow-xs">
+                        <img src="${escapeHtml(safeImg)}" alt="${escapeHtml(p.title)}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.src='https://placehold.co/640x400/e4e4e7/52525b?text=Entacritic'">
+                    </div>
+                    <div class="space-y-1.5">
+                        <h3 class="font-extrabold text-sm text-zinc-900 leading-snug line-clamp-1 group-hover:underline">${escapeHtml(p.title)}</h3>
+                        <div class="flex items-center gap-1.5">
+                            <span class="meta-badge ${stats.scoreClass} w-7 h-6 ${miniBadgeText} rounded font-black shrink-0">${stats.avgScore}</span>
+                            <span class="text-[11px] font-semibold text-zinc-600 truncate">${escapeHtml(stats.statusText)}</span>
+                        </div>
+                        <div class="text-[11px] text-zinc-400 truncate">${escapeHtml(p.author || '-')} · ${escapeHtml(p.category || '기타')}</div>
+                    </div>
+                </div>
+                ${showPlayButton ? `
+                <div class="pt-3">
+                    <a href="${escapeHtml(safeEntryUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="w-full inline-flex items-center justify-center gap-1.5 border border-zinc-300 hover:border-zinc-900 hover:bg-zinc-50 text-zinc-800 text-[11px] font-bold py-1.5 px-2.5 rounded-md transition">
+                        <i class="fa-solid fa-play text-[9px] text-metagreen"></i> 엔트리 실행
+                    </a>
+                </div>
+                ` : ''}
+            </div>
+            `;
+        }
+
+        window.scrollCarousel = function(elementId, direction) {
+            const carousel = document.getElementById(elementId);
             if (!carousel) return;
-            const step = Math.max(300, carousel.clientWidth * 0.75);
+            const step = Math.max(280, carousel.clientWidth * 0.78);
             carousel.scrollBy({ left: direction * step, behavior: 'smooth' });
+        };
+        window.scrollNotableCarousel = function(direction) {
+            window.scrollCarousel('notableCarousel', direction);
         };
 
         window.resetToHome = function() {
             searchQuery = '';
             searchCategory = '전체';
             selectedCategory = '전체';
+            activeCategoryHub = null;
+            lastMainView = 'home';
             const desktopInput = document.getElementById('searchInput');
             const mobileInput = document.getElementById('mobileSearchInput');
             if (desktopInput) desktopInput.value = '';
@@ -2117,11 +2546,180 @@
 
         window.showHomePage = function() {
             currentProjectId = null;
+            activeCategoryHub = null;
+            lastMainView = 'home';
             document.getElementById('homePage').classList.remove('hidden');
+            document.getElementById('categoryHubPage').classList.add('hidden');
             document.getElementById('searchPage').classList.add('hidden');
             document.getElementById('detailPage').classList.add('hidden');
+            updateCategoryActiveStyles();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
+
+        window.goBackFromDetail = function() {
+            if (lastMainView === 'category' && activeCategoryHub) {
+                openCategoryHub(activeCategoryHub);
+                return;
+            }
+            if (lastMainView === 'search' && searchQuery.trim()) {
+                currentProjectId = null;
+                document.getElementById('homePage').classList.add('hidden');
+                document.getElementById('categoryHubPage').classList.add('hidden');
+                document.getElementById('detailPage').classList.add('hidden');
+                document.getElementById('searchPage').classList.remove('hidden');
+                renderSearchResults();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+            showHomePage();
+        };
+
+        /**
+         * Metacritic 전용 카테고리 허브 페이지 (예: Games 페이지)
+         */
+        window.openCategoryHub = function(cat, sortOverride = null) {
+            if (!cat || cat === '전체') {
+                resetToHome();
+                return;
+            }
+            currentProjectId = null;
+            activeCategoryHub = cat;
+            lastMainView = 'category';
+
+            if (sortOverride) {
+                currentSort = sortOverride;
+                const hubSort = document.getElementById('categoryHubSort');
+                if (hubSort) hubSort.value = sortOverride;
+            }
+
+            document.getElementById('homePage').classList.add('hidden');
+            document.getElementById('searchPage').classList.add('hidden');
+            document.getElementById('detailPage').classList.add('hidden');
+            document.getElementById('categoryHubPage').classList.remove('hidden');
+
+            updateCategoryActiveStyles();
+            renderCategoryHub(cat);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        function renderCategoryHub(cat) {
+            const meta = CATEGORY_HUB_META[cat] || CATEGORY_HUB_META['기타'];
+            const titleEl = document.getElementById('categoryHubTitle');
+            const subEl = document.getElementById('categoryHubSubtitle');
+            const countEl = document.getElementById('categoryHubCount');
+            const latestEl = document.getElementById('categoryHubLatest');
+            const topEl = document.getElementById('categoryHubTop');
+            const gridEl = document.getElementById('categoryHubGrid');
+            if (!titleEl || !gridEl) return;
+
+            const catProjects = dbProjects.filter(p => p.category === cat);
+            titleEl.textContent = cat;
+            titleEl.className = `text-4xl sm:text-5xl font-black tracking-tight ${meta.colorClass}`;
+            if (subEl) subEl.textContent = meta.subtitle;
+            if (countEl) countEl.textContent = `총 ${catProjects.length}개 작품`;
+
+            const hubSort = document.getElementById('categoryHubSort');
+            if (hubSort && hubSort.value !== currentSort) hubSort.value = currentSort;
+
+            if (catProjects.length === 0) {
+                const emptyBox = `
+                <div class="w-full col-span-full py-12 bg-[#f4f4f4] rounded-xl text-center text-zinc-400 text-sm font-bold border border-zinc-200/80">
+                    아직 '${escapeHtml(cat)}' 카테고리에 등록된 작품이 없습니다. 첫 작품을 등록해 보세요!
+                </div>`;
+                if (latestEl) latestEl.innerHTML = emptyBox;
+                if (topEl) topEl.innerHTML = emptyBox;
+                gridEl.innerHTML = emptyBox;
+                return;
+            }
+
+            const byLatest = [...catProjects].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 12);
+            const byTop = [...catProjects].sort((a, b) => calculateStats(b.reviews || []).rawScore - calculateStats(a.reviews || []).rawScore).slice(0, 12);
+            const sortedAll = sortProjectsList(catProjects);
+
+            if (latestEl) latestEl.innerHTML = byLatest.map(p => buildCompactCardHtml(p, { showPlayButton: false })).join('');
+            if (topEl) topEl.innerHTML = byTop.map(p => buildCompactCardHtml(p, { showPlayButton: true })).join('');
+            gridEl.innerHTML = sortedAll.map(p => buildMetacriticCardHtml(p, false)).join('');
+        }
+
+        window.setCategoryRowTab = function(cat, tabVal) {
+            categoryRowTabs[cat] = tabVal;
+            renderHomeCategoryRows();
+        };
+
+        /**
+         * 홈 화면 카테고리별 컴팩트 행 렌더링 (Metacritic Games / Movies / TV Shows 행 스타일)
+         */
+        function renderHomeCategoryRows() {
+            const container = document.getElementById('categoryRowsContainer');
+            if (!container) return;
+
+            if (!isInitialDataLoaded && dbProjects.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const showcaseCats = ['게임', '생활과 도구', '스토리텔링', '예술', '지식 공유'];
+            const activeRows = showcaseCats
+                .map(cat => ({
+                    cat,
+                    items: dbProjects.filter(p => p.category === cat)
+                }))
+                .filter(row => row.items.length > 0);
+
+            if (activeRows.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = activeRows.map((row, idx) => {
+                const activeTab = categoryRowTabs[row.cat] || 'latest';
+                const carouselId = `catRowCarousel_${idx}`;
+                const sorted = [...row.items];
+                if (activeTab === 'highest') {
+                    sorted.sort((a, b) => calculateStats(b.reviews || []).rawScore - calculateStats(a.reviews || []).rawScore);
+                } else if (activeTab === 'reviews') {
+                    sorted.sort((a, b) => calculateStats(b.reviews || []).count - calculateStats(a.reviews || []).count);
+                } else {
+                    sorted.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                }
+
+                const tabBtn = (val, label) => {
+                    const isSelected = activeTab === val;
+                    return `<button type="button" onclick="setCategoryRowTab('${row.cat}', '${val}')" class="text-xs pb-1 transition whitespace-nowrap ${isSelected ? 'font-black text-zinc-900 border-b-2 border-zinc-900' : 'font-semibold text-zinc-400 hover:text-zinc-900'}">${label}</button>`;
+                };
+
+                return `
+                <div>
+                    <div class="flex items-center justify-between gap-4 mb-3">
+                        <div class="flex-grow border-b border-zinc-900 pb-2 flex items-baseline gap-3">
+                            <h2 class="text-xl sm:text-2xl font-black tracking-tight text-zinc-900">${escapeHtml(row.cat)}</h2>
+                            <button type="button" onclick="openCategoryHub('${row.cat}')" class="text-[11px] font-extrabold text-zinc-500 hover:text-zinc-900 uppercase tracking-wider transition">
+                                ${escapeHtml(row.cat)} 홈 &gt;
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0 pb-1">
+                            <button type="button" onclick="scrollCarousel('${carouselId}', -1)" aria-label="이전" class="w-8 h-8 rounded-full border border-zinc-300 hover:border-zinc-900 text-zinc-500 hover:text-zinc-900 flex items-center justify-center transition">
+                                <i class="fa-solid fa-arrow-left text-xs"></i>
+                            </button>
+                            <button type="button" onclick="scrollCarousel('${carouselId}', 1)" aria-label="다음" class="w-8 h-8 rounded-full border border-zinc-900 hover:bg-zinc-900 text-zinc-900 hover:text-white flex items-center justify-center transition">
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-4 mb-4">
+                        ${tabBtn('latest', '최신 등록')}
+                        ${tabBtn('highest', '최고 평점')}
+                        ${tabBtn('reviews', '리뷰 많은순')}
+                    </div>
+
+                    <div id="${carouselId}" class="flex gap-3.5 sm:gap-4 overflow-x-auto no-scrollbar touch-scroll-x snap-x snap-mandatory pb-2 scroll-smooth">
+                        ${sorted.slice(0, 12).map(p => buildCompactCardHtml(p, { showPlayButton: false })).join('')}
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
 
         function renderDetailReviews(project) {
             const reviews = [...(project.reviews || [])].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
@@ -2166,7 +2764,7 @@
                         : `신고가 접수되어 도배·테러 의심 리뷰로 가려졌습니다.`;
 
                     return `
-                    <div class="bg-[#f4f4f4] border border-zinc-200 rounded-lg flex flex-col justify-between overflow-hidden opacity-85">
+                    <div class="review-card-wrapper bg-[#f4f4f4] border border-zinc-200 rounded-lg flex flex-col justify-between overflow-hidden opacity-85">
                         <div class="p-6 space-y-3">
                             <div class="flex items-center justify-between text-[11px] font-bold text-zinc-400">
                                 <span>${escapeHtml(r.date)}</span>
@@ -2193,19 +2791,25 @@
                 if (numericScore >= 75) rClass = 'score-green';
                 else if (numericScore >= 50) rClass = 'score-yellow';
 
+                const isLongComment = String(r.comment || '').length > 140;
+
                 return `
-                <div class="bg-[#f4f4f4] rounded-lg flex flex-col justify-between overflow-hidden">
-                    <div class="p-6 space-y-4">
+                <div class="review-card-wrapper bg-[#f4f4f4] rounded-lg flex flex-col justify-between overflow-hidden">
+                    <div class="p-4 sm:p-6 space-y-3.5">
                         <div class="text-[11px] font-bold text-zinc-500 uppercase tracking-wide">${escapeHtml(r.date)}</div>
                         <div class="flex items-center gap-3.5">
                             <div class="meta-badge ${rClass} w-11 h-11 text-lg font-black rounded-full shrink-0">
                                 ${numericScore}
                             </div>
-                            <h4 class="font-extrabold text-zinc-900 text-lg truncate">${escapeHtml(r.author)}</h4>
+                            <h4 class="font-extrabold text-zinc-900 text-base sm:text-lg truncate">${escapeHtml(r.author)}</h4>
                         </div>
-                        <p class="text-sm text-zinc-800 leading-relaxed whitespace-pre-line">${escapeHtml(r.comment)}</p>
+                        <p class="review-comment-text text-sm text-zinc-800 leading-relaxed whitespace-pre-line ${isLongComment ? 'line-clamp-3' : ''}">${escapeHtml(r.comment)}</p>
+                        ${isLongComment ? `
+                        <button type="button" class="read-more-review-btn bg-zinc-900 hover:bg-black text-white text-[11px] font-bold px-3 py-1 rounded transition">
+                            더보기
+                        </button>` : ''}
                     </div>
-                    <div class="px-6 py-3 border-t border-zinc-200 flex items-center justify-between text-[11px] font-bold text-zinc-500">
+                    <div class="px-4 sm:px-6 py-3 border-t border-zinc-200 flex items-center justify-between text-[11px] font-bold text-zinc-500">
                         <button type="button" data-review-id="${escapeHtml(r.id)}" class="report-review-btn inline-flex items-center gap-1.5 transition ${hasReported ? 'text-zinc-400 cursor-default' : 'hover:text-red-600'}" ${hasReported ? 'disabled' : ''}>
                             <i class="${hasReported ? 'fa-solid' : 'fa-regular'} fa-flag"></i>
                             <span class="underline">${hasReported ? '신고됨' : '신고'}</span>
@@ -2239,9 +2843,13 @@
             container.innerHTML = html;
         }
 
-        window.showDetailPage = function(id) {
+        window.showDetailPage = function(id, options = {}) {
+            const { resetFilter = true, scrollToTop = true } = options;
             currentProjectId = id;
-            reviewFilter = 'all';
+            if (resetFilter) {
+                reviewFilter = 'all';
+            }
+
             const project = dbProjects.find(p => p.id === id);
             if (!project) return;
 
@@ -2249,6 +2857,7 @@
             const stats = calculateStats(reviews);
             const safeImg = sanitizeImageUrl(project.image, 'https://placehold.co/800x450/18181b/ffffff?text=Entacritic');
             const safeEntryUrl = sanitizeExternalUrl(project.entryUrl);
+            const isTbd = stats.avgScore === 'tbd';
 
             const banner = document.getElementById('detailTopBanner');
             if (banner) banner.className = `${stats.bannerClass} transition-colors duration-300`;
@@ -2260,10 +2869,23 @@
             document.getElementById('detailDeveloper').textContent = project.author || '-';
             document.getElementById('detailCategory').textContent = project.category || '기타';
             document.getElementById('detailCategoryPill').textContent = project.category || '기타';
-            document.getElementById('detailImage').src = safeImg;
+
+            const imgEl = document.getElementById('detailImage');
+            if (imgEl && imgEl.getAttribute('src') !== safeImg) {
+                imgEl.src = safeImg;
+            }
             document.getElementById('detailEntryLink').href = safeEntryUrl;
             document.getElementById('detailEntryBtn').href = safeEntryUrl;
             document.getElementById('detailSummary').textContent = project.description || '작품 설명이 없습니다.';
+
+            // 플랫폼 평점 요약 카드 업데이트
+            const platReviewEl = document.getElementById('detailPlatformReviewCount');
+            const platBadgeEl = document.getElementById('detailPlatformScoreBadge');
+            if (platReviewEl) platReviewEl.textContent = `${stats.count}개의 사용자 리뷰 기준`;
+            if (platBadgeEl) {
+                platBadgeEl.className = `meta-badge ${stats.scoreClass} w-12 h-12 ${isTbd ? 'text-sm' : 'text-xl'} font-black rounded-lg`;
+                platBadgeEl.textContent = stats.avgScore;
+            }
 
             const owner = isProjectOwner(project);
             const deleteBtn = document.getElementById('deleteProjectBtn');
@@ -2274,7 +2896,7 @@
             document.getElementById('detailMetascoreText').textContent = stats.statusText;
             document.getElementById('detailMetascoreSub').textContent = `${stats.count}개의 평가를 바탕으로`;
             const metaBadge = document.getElementById('detailMetascoreBadge');
-            metaBadge.className = `meta-badge ${stats.scoreClass} w-14 h-14 text-2xl font-black`;
+            metaBadge.className = `meta-badge ${stats.scoreClass} w-14 h-14 ${isTbd ? 'text-lg' : 'text-2xl'} font-black`;
             metaBadge.textContent = stats.avgScore;
 
             const posWidth = stats.posPct === '?' ? '0%' : `${stats.posPct}%`;
@@ -2288,8 +2910,8 @@
             document.getElementById('detailUserScoreText').textContent = stats.statusText;
             document.getElementById('detailUserScoreSub').textContent = `${stats.count}개의 사용자 리뷰`;
             const userBadge = document.getElementById('detailUserScoreBadge');
-            userBadge.className = `meta-badge ${stats.scoreClass} w-14 h-14 text-2xl font-black rounded-full`;
-            userBadge.textContent = stats.avgScore === '?' ? '?' : (stats.avgScore / 10).toFixed(1);
+            userBadge.className = `meta-badge ${stats.scoreClass} w-14 h-14 ${isTbd ? 'text-lg' : 'text-2xl'} font-black rounded-full`;
+            userBadge.textContent = isTbd ? 'tbd' : (stats.avgScore / 10).toFixed(1);
 
             document.getElementById('heroUserPos').style.width = posWidth;
             document.getElementById('heroUserMix').style.width = mixWidth;
@@ -2322,8 +2944,8 @@
                 }
             } else {
                 myScoreStatusEl.textContent = currentUser ? '아직 평가하지 않았습니다' : '로그인 후 평가 가능';
-                myScoreBadgeEl.className = 'meta-badge score-none w-12 h-12 text-lg font-black rounded-full';
-                myScoreBadgeEl.textContent = '?';
+                myScoreBadgeEl.className = 'meta-badge score-none w-12 h-12 text-sm font-black rounded-full';
+                myScoreBadgeEl.textContent = 'tbd';
                 renderMyScoreSegments(null);
 
                 if (writeReviewBtn) {
@@ -2336,7 +2958,7 @@
             document.getElementById('detailMetascoreStatus').textContent = stats.statusText;
             document.getElementById('detailBreakdownSub').textContent = `${stats.count}개의 사용자 리뷰`;
             const breakdownBadge = document.getElementById('detailBreakdownScoreBadge');
-            breakdownBadge.className = `meta-badge ${stats.scoreClass} w-16 h-16 text-2xl font-black rounded-xl`;
+            breakdownBadge.className = `meta-badge ${stats.scoreClass} w-16 h-16 ${isTbd ? 'text-xl' : 'text-2xl'} font-black rounded-xl`;
             breakdownBadge.textContent = stats.avgScore;
 
             document.getElementById('pctPositive').textContent = stats.posPct === '?' ? '0%' : `${stats.posPct}%`;
@@ -2353,9 +2975,13 @@
             renderDetailReviews(project);
 
             document.getElementById('homePage').classList.add('hidden');
+            document.getElementById('categoryHubPage').classList.add('hidden');
             document.getElementById('searchPage').classList.add('hidden');
             document.getElementById('detailPage').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (scrollToTop) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         };
 
         window.setReviewFilter = function(filter) {
@@ -2387,6 +3013,7 @@
         }
 
         function updateCategoryActiveStyles() {
+            const highlightedCat = activeCategoryHub || selectedCategory;
             document.querySelectorAll('.home-cat-pill').forEach(btn => {
                 const isActive = btn.getAttribute('data-cat') === selectedCategory;
                 btn.className = isActive
@@ -2395,16 +3022,25 @@
             });
 
             document.querySelectorAll('.nav-cat-btn').forEach(btn => {
-                const isActive = btn.getAttribute('data-cat') === selectedCategory;
+                const isActive = btn.getAttribute('data-cat') === activeCategoryHub;
                 btn.className = isActive
-                    ? 'nav-cat-btn text-[#ffbd3f] transition'
-                    : 'nav-cat-btn hover:text-[#ffbd3f] transition';
+                    ? 'nav-cat-btn px-3 py-2 rounded-md bg-zinc-900 text-[#ffbd3f] transition'
+                    : 'nav-cat-btn px-3 py-2 rounded-md hover:bg-zinc-900 hover:text-[#ffbd3f] transition';
             });
+
+            document.querySelectorAll('.mobile-cat-pill').forEach(btn => {
+                const isActive = btn.getAttribute('data-cat') === highlightedCat;
+                btn.className = isActive
+                    ? 'mobile-cat-pill bg-[#ffbd3f] text-black px-3 py-1.5 rounded-full whitespace-nowrap transition'
+                    : 'mobile-cat-pill bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-1.5 rounded-full whitespace-nowrap transition';
+            });
+
+            renderMobileDrawerCategories();
         }
 
         function buildSkeletonCardHtml(isCarousel = false) {
             const sizeClasses = isCarousel
-                ? 'w-[270px] sm:w-[285px] shrink-0'
+                ? 'w-[275px] sm:w-[292px] shrink-0'
                 : 'w-full';
             return `
             <div class="${sizeClasses} bg-[#f4f4f4] rounded-xl overflow-hidden border border-zinc-200/80 animate-pulse">
@@ -2427,20 +3063,30 @@
 
         window.renderGrid = function() {
             const carousel = document.getElementById('notableCarousel');
+            const trendingEl = document.getElementById('trendingCarousel');
             const grid = document.getElementById('projectsGrid');
             if (!grid) return;
 
             updateCategoryActiveStyles();
 
-            // 첫 클라우드 응답 전이고 로컬 백업도 비어 있을 때는 빈 안내 대신 스켈레톤 카드 표시
+            // 클라우드 첫 응답 전이고 로컬 캐시도 비어 있을 때는 스켈레톤 카드 표시
             if (!isInitialDataLoaded && dbProjects.length === 0) {
                 if (carousel) {
                     carousel.innerHTML = Array.from({ length: 4 }, () => buildSkeletonCardHtml(true)).join('');
+                }
+                if (trendingEl) {
+                    trendingEl.innerHTML = Array.from({ length: 6 }, () => `
+                        <div class="w-[185px] sm:w-[200px] shrink-0 space-y-2.5 animate-pulse">
+                            <div class="w-full aspect-[4/3] rounded-lg bg-zinc-200"></div>
+                            <div class="h-3.5 bg-zinc-200 rounded w-4/5"></div>
+                            <div class="h-3 bg-zinc-100 rounded w-1/2"></div>
+                        </div>`).join('');
                 }
                 grid.innerHTML = Array.from({ length: 8 }, () => buildSkeletonCardHtml(false)).join('');
                 return;
             }
 
+            // 1) 최신 및 주목할 작품 (New and Notable)
             if (carousel) {
                 const notable = [...dbProjects]
                     .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
@@ -2456,6 +3102,33 @@
                 }
             }
 
+            // 2) 지금 주목받는 인기 작품 (리뷰 수 + 평점 가중치 정렬)
+            if (trendingEl) {
+                const trending = [...dbProjects]
+                    .sort((a, b) => {
+                        const sa = calculateStats(a.reviews || []);
+                        const sb = calculateStats(b.reviews || []);
+                        const scoreA = (sa.count * 25) + Math.max(0, sa.rawScore);
+                        const scoreB = (sb.count * 25) + Math.max(0, sb.rawScore);
+                        if (scoreB !== scoreA) return scoreB - scoreA;
+                        return (b.createdAt || 0) - (a.createdAt || 0);
+                    })
+                    .slice(0, 12);
+
+                if (trending.length === 0) {
+                    trendingEl.innerHTML = `
+                    <div class="w-full py-10 bg-[#f4f4f4] rounded-xl text-center text-zinc-400 text-xs font-bold border border-zinc-200/80">
+                        작품이 등록되면 인기 순위가 이곳에 표시됩니다.
+                    </div>`;
+                } else {
+                    trendingEl.innerHTML = trending.map(p => buildCompactCardHtml(p, { showPlayButton: true })).join('');
+                }
+            }
+
+            // 3) 카테고리별 컴팩트 행
+            renderHomeCategoryRows();
+
+            // 4) 전체 작품 아카이브 그리드
             const filtered = sortProjectsList(
                 dbProjects.filter(p => selectedCategory === '전체' || p.category === selectedCategory)
             );
@@ -2526,23 +3199,24 @@
             listEl.innerHTML = filtered.map(p => {
                 const stats = calculateStats(p.reviews || []);
                 const safeImg = sanitizeImageUrl(p.image, 'https://placehold.co/320x180/e4e4e7/52525b?text=Entacritic');
+                const badgeTextSize = stats.avgScore === 'tbd' ? 'text-xs sm:text-sm' : 'text-lg sm:text-xl';
                 return `
-                <div data-project-id="${escapeHtml(p.id)}" class="project-card py-5 flex items-center justify-between gap-4 hover:bg-zinc-50 px-2 -mx-2 rounded-lg transition cursor-pointer">
-                    <div class="flex items-start gap-4 min-w-0">
-                        <div class="w-24 sm:w-28 aspect-video rounded-md overflow-hidden bg-zinc-200 shrink-0 border border-zinc-200">
+                <div data-project-id="${escapeHtml(p.id)}" class="project-card py-4 sm:py-5 flex items-center justify-between gap-3 sm:gap-4 hover:bg-zinc-50 px-2 -mx-2 rounded-lg transition cursor-pointer">
+                    <div class="flex items-start gap-3 sm:gap-4 min-w-0">
+                        <div class="w-20 sm:w-28 aspect-video rounded-md overflow-hidden bg-zinc-200 shrink-0 border border-zinc-200">
                             <img src="${escapeHtml(safeImg)}" alt="${escapeHtml(p.title)}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/320x180/e4e4e7/52525b?text=Entacritic'">
                         </div>
                         <div class="min-w-0 space-y-1.5">
-                            <h3 class="font-black text-base sm:text-lg text-zinc-900 leading-snug truncate">${escapeHtml(p.title)}</h3>
-                            <div class="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
-                                <span class="bg-white border border-zinc-300 text-zinc-700 text-[11px] font-bold px-2 py-0.5 rounded">${escapeHtml(p.category)}</span>
+                            <h3 class="font-black text-sm sm:text-lg text-zinc-900 leading-snug line-clamp-2">${escapeHtml(p.title)}</h3>
+                            <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-zinc-500">
+                                <span class="bg-white border border-zinc-300 text-zinc-700 text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded">${escapeHtml(p.category)}</span>
                                 <span>${escapeHtml(p.date || '-')}</span>
                                 <span>·</span>
                                 <span class="font-bold text-zinc-800">${escapeHtml(p.author || '-')}</span>
                             </div>
                         </div>
                     </div>
-                    <div class="meta-badge ${stats.scoreClass} w-12 h-12 text-xl font-black rounded-lg shrink-0">
+                    <div class="meta-badge ${stats.scoreClass} w-10 h-10 sm:w-12 sm:h-12 ${badgeTextSize} font-black rounded-lg shrink-0">
                         ${stats.avgScore}
                     </div>
                 </div>`;
@@ -2558,13 +3232,19 @@
             currentSort = sortVal;
             const homeSort = document.getElementById('sortSelect');
             const searchSort = document.getElementById('searchSortSelect');
+            const hubSort = document.getElementById('categoryHubSort');
             if (homeSort && homeSort.value !== sortVal) homeSort.value = sortVal;
             if (searchSort && searchSort.value !== sortVal) searchSort.value = sortVal;
+            if (hubSort && hubSort.value !== sortVal) hubSort.value = sortVal;
 
             renderGrid();
             const searchPage = document.getElementById('searchPage');
             if (searchQuery.trim() && searchPage && !searchPage.classList.contains('hidden')) {
                 renderSearchResults();
+            }
+            const hubPage = document.getElementById('categoryHubPage');
+            if (activeCategoryHub && hubPage && !hubPage.classList.contains('hidden')) {
+                renderCategoryHub(activeCategoryHub);
             }
         };
 
@@ -2577,7 +3257,12 @@
             if (mobileInput) mobileInput.value = '';
 
             document.getElementById('categoryLabel').textContent = `카테고리: ${cat}`;
-            showHomePage();
+            activeCategoryHub = null;
+            lastMainView = 'home';
+            document.getElementById('homePage').classList.remove('hidden');
+            document.getElementById('categoryHubPage').classList.add('hidden');
+            document.getElementById('searchPage').classList.add('hidden');
+            document.getElementById('detailPage').classList.add('hidden');
             renderGrid();
         };
 
@@ -2595,10 +3280,14 @@
             }
 
             currentProjectId = null;
+            activeCategoryHub = null;
+            lastMainView = 'search';
             searchCategory = '전체';
             document.getElementById('homePage').classList.add('hidden');
+            document.getElementById('categoryHubPage').classList.add('hidden');
             document.getElementById('detailPage').classList.add('hidden');
             document.getElementById('searchPage').classList.remove('hidden');
+            updateCategoryActiveStyles();
             renderSearchResults();
         };
 
@@ -2664,144 +3353,144 @@
             e.preventDefault();
             if (!currentUser || !currentProjectId) return;
 
-            const lockStatus = checkSecurityLockout();
-            if (lockStatus.locked) {
-                await showMessage(lockStatus.message, '작성 제한 안내');
-                return;
-            }
-
-            const isVerified = await verifyCurrentSession();
-            if (!isVerified) {
-                saveSession(null);
-                renderUserAccountUI();
-                closeWriteReviewModal();
-                await showMessage('로그인 인증 정보가 유효하지 않습니다.\n다시 로그인한 후 시도해 주세요.', '인증 오류');
-                openLoginModal();
-                return;
-            }
-
-            const proj = dbProjects.find(p => p.id === currentProjectId);
-            if (!proj) return;
-
-            const deviceStatus = getDeviceProjectReviewStatus(proj);
-            if (deviceStatus.reviewed) {
-                await showMessage('하나의 기기에서는 작품마다 한 번만 평가할 수 있습니다.', '중복 평가 차단');
-                closeWriteReviewModal();
-                return;
-            }
-
-            const score = Math.max(0, Math.min(100, parseInt(document.getElementById('reviewScore').value, 10) || 0));
-            const comment = document.getElementById('reviewComment').value.trim();
-
-            const textCheck = validateTextSecurity(comment, {
-                minLen: 5,
-                maxLen: 500,
-                blockLinks: true,
-                fieldName: '리뷰 내용'
-            });
-            if (!textCheck.valid) {
-                const strikes = recordSecurityViolation(textCheck.reason);
-                await showMessage(`${textCheck.reason}\n(경고 누적: ${strikes}회 / 3회 누적 시 일시 작성 제한)`, '부적절한 리뷰 차단');
-                return;
-            }
-
-            const rateCheck = checkActionRateLimit('review', { score, comment });
-            if (!rateCheck.allowed) {
-                recordSecurityViolation(rateCheck.reason);
-                await showMessage(rateCheck.reason, '도배·테러 방지 안내');
-                return;
-            }
-
             const submitReviewBtn = document.getElementById('submitReviewBtn');
+            if (submitReviewBtn && submitReviewBtn.disabled) return;
+
             const origReviewBtnHtml = submitReviewBtn ? submitReviewBtn.innerHTML : '리뷰 등록하기';
             if (submitReviewBtn) {
                 submitReviewBtn.disabled = true;
                 submitReviewBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 등록 중...';
             }
 
-            let aiCheck = null;
             try {
-                aiCheck = await evaluateReviewSubmissionWithAI({
+                const lockStatus = checkSecurityLockout();
+                if (lockStatus.locked) {
+                    await showMessage(lockStatus.message, '작성 제한 안내');
+                    return;
+                }
+
+                const isVerified = await verifyCurrentSession();
+                if (!isVerified) {
+                    saveSession(null);
+                    renderUserAccountUI();
+                    closeWriteReviewModal();
+                    await showMessage('로그인 인증 정보가 유효하지 않습니다.\n다시 로그인한 후 시도해 주세요.', '인증 오류');
+                    openLoginModal();
+                    return;
+                }
+
+                const proj = dbProjects.find(p => p.id === currentProjectId);
+                if (!proj) return;
+
+                const deviceStatus = getDeviceProjectReviewStatus(proj);
+                if (deviceStatus.reviewed) {
+                    await showMessage('하나의 기기에서는 작품마다 한 번만 평가할 수 있습니다.', '중복 평가 차단');
+                    closeWriteReviewModal();
+                    return;
+                }
+
+                const score = Math.max(0, Math.min(100, parseInt(document.getElementById('reviewScore').value, 10) || 0));
+                const comment = document.getElementById('reviewComment').value.trim();
+
+                const textCheck = validateTextSecurity(comment, {
+                    minLen: 5,
+                    maxLen: 500,
+                    blockLinks: true,
+                    fieldName: '리뷰 내용'
+                });
+                if (!textCheck.valid) {
+                    const strikes = recordSecurityViolation(textCheck.reason);
+                    await showMessage(`${textCheck.reason}\n(경고 누적: ${strikes}회 / 3회 누적 시 일시 작성 제한)`, '부적절한 리뷰 차단');
+                    return;
+                }
+
+                const rateCheck = checkActionRateLimit('review', { score, comment });
+                if (!rateCheck.allowed) {
+                    recordSecurityViolation(rateCheck.reason);
+                    await showMessage(rateCheck.reason, '도배·테러 방지 안내');
+                    return;
+                }
+
+                const aiCheck = await evaluateReviewSubmissionWithAI({
                     projectTitle: proj.title || '',
                     projectCategory: proj.category || '기타',
                     score: score,
                     comment: comment
                 });
+
+                if (aiCheck && aiCheck.verdict === 'VIOLATION') {
+                    const strikes = recordSecurityViolation(`ai_blocked:${aiCheck.category}`);
+                    await showMessage(`부적절한 리뷰로 판단되어 등록이 차단되었습니다.\n사유: ${aiCheck.reason}\n(경고 누적: ${strikes}회 / 3회 누적 시 일시 제한)`, '리뷰 등록 차단');
+                    return;
+                }
+
+                const today = new Date();
+                const dateStr = `${today.getFullYear()}.${(today.getMonth() + 1).toString().padStart(2, '0')}.${today.getDate().toString().padStart(2, '0')}`;
+
+                const newReview = {
+                    id: 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                    author: currentUser,
+                    authorUid: auth && auth.currentUser ? auth.currentUser.uid : null,
+                    deviceId: currentDeviceId,
+                    deviceFp: currentDeviceFp,
+                    score: score,
+                    date: dateStr,
+                    createdAt: Date.now(),
+                    comment: comment,
+                    reports: [],
+                    aiStatus: 'verified'
+                };
+
+                if (db) {
+                    try {
+                        const projDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', currentProjectId);
+                        const latestSnap = await getDoc(projDocRef);
+                        if (latestSnap.exists()) {
+                            const latestReviews = Array.isArray(latestSnap.data().reviews) ? latestSnap.data().reviews : [];
+                            const currentUid = auth && auth.currentUser ? auth.currentUser.uid : null;
+                            const duplicateInCloud = latestReviews.some(r =>
+                                r.author === currentUser ||
+                                (currentDeviceId && r.deviceId === currentDeviceId) ||
+                                (currentDeviceFp && r.deviceFp === currentDeviceFp) ||
+                                (currentUid && r.authorUid === currentUid)
+                            );
+                            if (duplicateInCloud) {
+                                markProjectReviewedOnDevice(currentProjectId, score, currentUser);
+                                await showMessage('이미 이 기기 또는 계정으로 평가를 완료한 작품입니다.', '중복 평가 차단');
+                                closeWriteReviewModal();
+                                return;
+                            }
+                        }
+                        await updateDoc(projDocRef, { reviews: arrayUnion(newReview) });
+                    } catch (err) {
+                        console.error("Cloud review update error:", err);
+                        await showMessage(
+                            `클라우드 서버에 리뷰를 저장하지 못했습니다.\n(오류: ${err?.code || err?.message})\n\nFirestore 보안 규칙 및 네트워크 상태를 확인해 주세요.`,
+                            '리뷰 저장 실패'
+                        );
+                        return;
+                    }
+                }
+
+                const existsLocally = (proj.reviews || []).some(r => r.id === newReview.id);
+                if (!existsLocally) {
+                    proj.reviews = [newReview, ...(proj.reviews || [])];
+                    saveProjectsToLocalBackup();
+                }
+
+                markProjectReviewedOnDevice(currentProjectId, score, currentUser);
+                recordActionSuccess('review', { score, comment });
+
+                document.getElementById('reviewForm').reset();
+                closeWriteReviewModal();
+                showDetailPage(currentProjectId, { resetFilter: false, scrollToTop: false });
+                renderGrid();
             } finally {
                 if (submitReviewBtn) {
                     submitReviewBtn.disabled = false;
                     submitReviewBtn.innerHTML = origReviewBtnHtml;
                 }
             }
-
-            if (aiCheck && aiCheck.verdict === 'VIOLATION') {
-                const strikes = recordSecurityViolation(`ai_blocked:${aiCheck.category}`);
-                await showMessage(`부적절한 리뷰로 판단되어 등록이 차단되었습니다.\n사유: ${aiCheck.reason}\n(경고 누적: ${strikes}회 / 3회 누적 시 일시 제한)`, '리뷰 등록 차단');
-                return;
-            }
-
-            const today = new Date();
-            const dateStr = `${today.getFullYear()}.${(today.getMonth() + 1).toString().padStart(2, '0')}.${today.getDate().toString().padStart(2, '0')}`;
-
-            const newReview = {
-                id: 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-                author: currentUser,
-                authorUid: auth && auth.currentUser ? auth.currentUser.uid : null,
-                deviceId: currentDeviceId,
-                deviceFp: currentDeviceFp,
-                score: score,
-                date: dateStr,
-                createdAt: Date.now(),
-                comment: comment,
-                reports: [],
-                aiStatus: 'verified'
-            };
-
-            // 클라우드 모드에서는 Firestore 저장 실패 시 조용히 넘기지 않고 오류를 명확히 안내
-            if (db) {
-                try {
-                    const projDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', currentProjectId);
-                    const latestSnap = await getDoc(projDocRef);
-                    if (latestSnap.exists()) {
-                        const latestReviews = Array.isArray(latestSnap.data().reviews) ? latestSnap.data().reviews : [];
-                        const currentUid = auth && auth.currentUser ? auth.currentUser.uid : null;
-                        const duplicateInCloud = latestReviews.some(r =>
-                            r.author === currentUser ||
-                            (currentDeviceId && r.deviceId === currentDeviceId) ||
-                            (currentDeviceFp && r.deviceFp === currentDeviceFp) ||
-                            (currentUid && r.authorUid === currentUid)
-                        );
-                        if (duplicateInCloud) {
-                            markProjectReviewedOnDevice(currentProjectId, score, currentUser);
-                            await showMessage('이미 이 기기 또는 계정으로 평가를 완료한 작품입니다.', '중복 평가 차단');
-                            closeWriteReviewModal();
-                            return;
-                        }
-                    }
-                    await updateDoc(projDocRef, { reviews: arrayUnion(newReview) });
-                } catch (err) {
-                    console.error("Cloud review update error:", err);
-                    await showMessage(
-                        `클라우드 서버에 리뷰를 저장하지 못했습니다.\n(오류: ${err?.code || err?.message})\n\nFirestore 보안 규칙 및 네트워크 상태를 확인해 주세요.`,
-                        '리뷰 저장 실패'
-                    );
-                    return;
-                }
-            }
-
-            const existsLocally = (proj.reviews || []).some(r => r.id === newReview.id);
-            if (!existsLocally) {
-                proj.reviews = [newReview, ...(proj.reviews || [])];
-                saveProjectsToLocalBackup();
-            }
-
-            markProjectReviewedOnDevice(currentProjectId, score, currentUser);
-            recordActionSuccess('review', { score, comment });
-
-            document.getElementById('reviewForm').reset();
-            closeWriteReviewModal();
-            showDetailPage(currentProjectId);
-            renderGrid();
         };
 
         window.openReportModal = async function(reviewId) {
@@ -2842,41 +3531,44 @@
             document.getElementById('reportModal').classList.add('hidden');
         };
 
+        /**
+         * [버그 수정] Firestore 트랜잭션(runTransaction)을 사용하여 동시 리뷰 작성 시 데이터 덮어쓰기 방지
+         */
         window.submitReportToAI = async function(e) {
             e.preventDefault();
             if (!currentProjectId) return;
 
-            const reviewId = document.getElementById('reportReviewId').value;
-            const reportReason = document.getElementById('reportReasonSelect').value;
-            const reportDetail = document.getElementById('reportDetailInput').value.trim();
-
-            const proj = dbProjects.find(p => p.id === currentProjectId);
-            if (!proj) return;
-
-            const reviews = Array.isArray(proj.reviews) ? [...proj.reviews] : [];
-            const targetIdx = reviews.findIndex(r => r.id === reviewId);
-            if (targetIdx === -1) return;
-
-            const targetReview = { ...reviews[targetIdx] };
-            const reporterKey = currentDeviceFp || currentDeviceId || 'unknown_device';
-            const existingReports = Array.isArray(targetReview.reports) ? [...targetReview.reports] : [];
-
-            if (targetReview.aiStatus === 'protected') {
-                closeReportModal();
-                await showMessage('이미 정상 리뷰로 보호 확정된 리뷰입니다.', '신고 기각');
-                return;
-            }
-
             const submitReportBtn = document.getElementById('submitReportBtn');
+            if (submitReportBtn && submitReportBtn.disabled) return;
+
             const origReportBtnHtml = submitReportBtn ? submitReportBtn.innerHTML : '신고 접수';
             if (submitReportBtn) {
                 submitReportBtn.disabled = true;
                 submitReportBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 검토 중...';
             }
 
-            let judgment = null;
             try {
-                judgment = await adjudicateReportWithAI({
+                const reviewId = document.getElementById('reportReviewId').value;
+                const reportReason = document.getElementById('reportReasonSelect').value;
+                const reportDetail = document.getElementById('reportDetailInput').value.trim();
+
+                const proj = dbProjects.find(p => p.id === currentProjectId);
+                if (!proj) return;
+
+                const reviews = Array.isArray(proj.reviews) ? [...proj.reviews] : [];
+                const targetIdx = reviews.findIndex(r => r.id === reviewId);
+                if (targetIdx === -1) return;
+
+                const targetReview = { ...reviews[targetIdx] };
+                const reporterKey = currentDeviceFp || currentDeviceId || 'unknown_device';
+
+                if (targetReview.aiStatus === 'protected') {
+                    closeReportModal();
+                    await showMessage('이미 정상 리뷰로 보호 확정된 리뷰입니다.', '신고 기각');
+                    return;
+                }
+
+                const judgment = await adjudicateReportWithAI({
                     projectTitle: proj.title || '',
                     projectDesc: proj.description || '',
                     score: Number(targetReview.score) || 0,
@@ -2885,62 +3577,79 @@
                     reportDetail: reportDetail,
                     isReporterOwner: isProjectOwner(proj)
                 });
+
+                const isViolation = Boolean(judgment && judgment.verdict === 'VIOLATION');
+                const nextAiStatus = isViolation ? 'blinded' : 'protected';
+                const nextAiReason = judgment
+                    ? judgment.reason
+                    : (isViolation
+                        ? '도배 또는 부적절한 표현이 감지되었습니다.'
+                        : '작품에 대한 정당한 감상 및 비판 리뷰로 확인되었습니다.');
+
+                if (db) {
+                    try {
+                        const projDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', currentProjectId);
+                        await runTransaction(db, async (transaction) => {
+                            const snap = await transaction.get(projDocRef);
+                            if (!snap.exists()) {
+                                throw new Error('해당 작품을 찾을 수 없습니다.');
+                            }
+                            const serverReviews = Array.isArray(snap.data().reviews) ? [...snap.data().reviews] : [];
+                            const idx = serverReviews.findIndex(r => r.id === reviewId);
+                            if (idx === -1) {
+                                throw new Error('신고 대상 리뷰가 이미 삭제되었습니다.');
+                            }
+
+                            const latestReview = { ...serverReviews[idx] };
+                            const latestReports = Array.isArray(latestReview.reports) ? [...latestReview.reports] : [];
+                            if (!latestReports.includes(reporterKey)) {
+                                latestReports.push(reporterKey);
+                            }
+
+                            latestReview.reports = latestReports;
+                            latestReview.aiStatus = nextAiStatus;
+                            latestReview.aiReason = nextAiReason;
+                            serverReviews[idx] = latestReview;
+
+                            transaction.update(projDocRef, { reviews: serverReviews });
+                        });
+                    } catch (err) {
+                        console.error("Cloud report transaction error:", err);
+                        if (isViolation) {
+                            await showMessage(`신고 결과를 클라우드에 반영하지 못했습니다.\n(오류: ${err?.code || err?.message})`, '신고 처리 실패');
+                            return;
+                        }
+                    }
+                }
+
+                // 로컬 상태 동기화
+                const existingReports = Array.isArray(targetReview.reports) ? [...targetReview.reports] : [];
+                if (!existingReports.includes(reporterKey)) {
+                    existingReports.push(reporterKey);
+                }
+                targetReview.reports = existingReports;
+                targetReview.aiStatus = nextAiStatus;
+                targetReview.aiReason = nextAiReason;
+                reviews[targetIdx] = targetReview;
+                proj.reviews = reviews;
+                saveProjectsToLocalBackup();
+
+                if (isViolation) {
+                    closeReportModal();
+                    showDetailPage(currentProjectId, { resetFilter: false, scrollToTop: false });
+                    renderGrid();
+                    await showMessage(`신고가 승인되어 해당 리뷰가 블라인드 처리되었으며 평점 산정에서 제외되었습니다.\n\n판정 사유: ${nextAiReason}`, '신고 승인');
+                } else {
+                    const strikes = recordSecurityViolation('false_report');
+                    closeReportModal();
+                    showDetailPage(currentProjectId, { resetFilter: false, scrollToTop: false });
+                    await showMessage(`해당 리뷰는 작품에 대한 정당한 평가로 확인되어 신고가 기각되었습니다.\n(평점은 변경되지 않으며 허위 신고 누적 시 이용이 제한됩니다. 누적: ${strikes}회)\n\n사유: ${nextAiReason}`, '신고 기각');
+                }
             } finally {
                 if (submitReportBtn) {
                     submitReportBtn.disabled = false;
                     submitReportBtn.innerHTML = origReportBtnHtml;
                 }
-            }
-
-            if (!existingReports.includes(reporterKey)) {
-                existingReports.push(reporterKey);
-            }
-            targetReview.reports = existingReports;
-
-            if (judgment && judgment.verdict === 'VIOLATION') {
-                targetReview.aiStatus = 'blinded';
-                targetReview.aiReason = judgment.reason;
-                reviews[targetIdx] = targetReview;
-
-                if (db) {
-                    try {
-                        const projDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', currentProjectId);
-                        await updateDoc(projDocRef, { reviews: reviews });
-                    } catch (err) {
-                        console.error("Cloud report update error:", err);
-                        await showMessage(`신고 결과를 클라우드에 반영하지 못했습니다.\n(오류: ${err?.code || err?.message})`, '신고 처리 실패');
-                        return;
-                    }
-                }
-
-                proj.reviews = reviews;
-                saveProjectsToLocalBackup();
-
-                closeReportModal();
-                showDetailPage(currentProjectId);
-                renderGrid();
-                await showMessage(`신고가 승인되어 해당 리뷰가 블라인드 처리되었으며 평점 산정에서 제외되었습니다.\n\n판정 사유: ${judgment.reason}`, '신고 승인');
-            } else {
-                targetReview.aiStatus = 'protected';
-                targetReview.aiReason = judgment ? judgment.reason : '작품에 대한 정당한 감상 및 비판 리뷰로 확인되었습니다.';
-                reviews[targetIdx] = targetReview;
-
-                if (db) {
-                    try {
-                        const projDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', currentProjectId);
-                        await updateDoc(projDocRef, { reviews: reviews });
-                    } catch (err) {
-                        console.warn("Cloud report protect fallback:", err);
-                    }
-                }
-
-                proj.reviews = reviews;
-                saveProjectsToLocalBackup();
-
-                const strikes = recordSecurityViolation('false_report');
-                closeReportModal();
-                showDetailPage(currentProjectId);
-                await showMessage(`해당 리뷰는 작품에 대한 정당한 평가로 확인되어 신고가 기각되었습니다.\n(평점은 변경되지 않으며 허위 신고 누적 시 이용이 제한됩니다. 누적: ${strikes}회)\n\n사유: ${targetReview.aiReason}`, '신고 기각');
             }
         };
 
@@ -2972,145 +3681,146 @@
             e.preventDefault();
             if (!currentUser) return;
 
-            const lockStatus = checkSecurityLockout();
-            if (lockStatus.locked) {
-                await showMessage(lockStatus.message, '등록 제한 안내');
-                return;
-            }
-
-            const isVerified = await verifyCurrentSession();
-            if (!isVerified) {
-                saveSession(null);
-                renderUserAccountUI();
-                closeNewProjectModal();
-                await showMessage('로그인 인증 정보가 유효하지 않습니다.\n다시 로그인한 후 시도해 주세요.', '인증 오류');
-                openLoginModal();
-                return;
-            }
-
-            const rateCheck = checkActionRateLimit('project');
-            if (!rateCheck.allowed) {
-                recordSecurityViolation(rateCheck.reason);
-                await showMessage(rateCheck.reason, '등록 제한 안내');
-                return;
-            }
-
-            const title = document.getElementById('newProjTitle').value.trim();
-            const authorName = document.getElementById('newProjAuthor').value.trim() || currentUser;
-            const category = document.getElementById('newProjCategory').value;
-            const entryUrlRaw = document.getElementById('newProjEntryUrl').value.trim();
-            const description = document.getElementById('newProjDesc').value.trim();
-            const image = uploadedImageDataUrl || 'https://placehold.co/800x450/18181b/ffffff?text=Entacritic';
-
-            const titleCheck = validateTextSecurity(title, {
-                minLen: 1,
-                maxLen: 80,
-                blockLinks: false,
-                allowRepetitive: true,
-                fieldName: '작품 제목'
-            });
-            if (!titleCheck.valid) {
-                await showMessage(titleCheck.reason, '입력 오류');
-                return;
-            }
-
-            const authorCheck = validateTextSecurity(authorName, {
-                minLen: 1,
-                maxLen: 40,
-                blockLinks: false,
-                allowRepetitive: true,
-                fieldName: '제작자 이름'
-            });
-            if (!authorCheck.valid) {
-                await showMessage(authorCheck.reason, '입력 오류');
-                return;
-            }
-
-            const descCheck = validateTextSecurity(description, {
-                minLen: 2,
-                maxLen: 1000,
-                blockLinks: false,
-                fieldName: '작품 요약 설명'
-            });
-            if (!descCheck.valid) {
-                await showMessage(descCheck.reason, '입력 오류');
-                return;
-            }
-
-            const parsedEntry = parseEntryProjectUrl(entryUrlRaw);
-            if (!parsedEntry.valid) {
-                await showMessage(parsedEntry.error, '링크 형식 오류');
-                return;
-            }
-
-            const isDuplicate = dbProjects.some(p => {
-                if (p.entryProjectId && p.entryProjectId.toLowerCase() === parsedEntry.projectId) {
-                    return true;
-                }
-                if (p.entryUrl) {
-                    const existingParsed = parseEntryProjectUrl(p.entryUrl);
-                    if (existingParsed.valid && existingParsed.projectId === parsedEntry.projectId) {
-                        return true;
-                    }
-                }
-                return false;
-            });
-
-            if (isDuplicate) {
-                await showMessage('이미 등록되어 있는 엔트리 작품입니다!\n동일 작품은 중복 등록할 수 없습니다.', '중복 작품 경고');
-                return;
-            }
-
-            const today = new Date();
-            const dateStr = `${today.getFullYear()}.${(today.getMonth() + 1).toString().padStart(2, '0')}.${today.getDate().toString().padStart(2, '0')}`;
-
-            const newId = 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-            const newProjData = {
-                id: newId,
-                title: title,
-                category: category,
-                author: authorName,
-                registeredBy: currentUser,
-                date: dateStr,
-                description: description,
-                image: image,
-                entryUrl: parsedEntry.canonicalUrl,
-                entryProjectId: parsedEntry.projectId,
-                createdAt: Date.now(),
-                reviews: []
-            };
-
             const submitBtn = document.getElementById('submitProjectBtn');
+            if (submitBtn && submitBtn.disabled) return;
             if (submitBtn) submitBtn.disabled = true;
 
             try {
-                // 클라우드 모드일 경우 Firestore에 실제로 저장이 성공해야만 등록 완료 처리
-                if (db) {
-                    const projDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', newId);
-                    await setDoc(projDocRef, newProjData);
+                const lockStatus = checkSecurityLockout();
+                if (lockStatus.locked) {
+                    await showMessage(lockStatus.message, '등록 제한 안내');
+                    return;
                 }
-            } catch (err) {
-                console.error("Cloud project submit error:", err);
-                await showMessage(
-                    `클라우드 서버에 작품을 업로드하지 못했습니다.\n(오류: ${err?.code || err?.message})\n\nFirebase 익명 로그인 및 Firestore 보안 규칙을 확인해 주세요.`,
-                    '작품 업로드 실패'
-                );
-                return;
+
+                const isVerified = await verifyCurrentSession();
+                if (!isVerified) {
+                    saveSession(null);
+                    renderUserAccountUI();
+                    closeNewProjectModal();
+                    await showMessage('로그인 인증 정보가 유효하지 않습니다.\n다시 로그인한 후 시도해 주세요.', '인증 오류');
+                    openLoginModal();
+                    return;
+                }
+
+                const rateCheck = checkActionRateLimit('project');
+                if (!rateCheck.allowed) {
+                    recordSecurityViolation(rateCheck.reason);
+                    await showMessage(rateCheck.reason, '등록 제한 안내');
+                    return;
+                }
+
+                const title = document.getElementById('newProjTitle').value.trim();
+                const authorName = document.getElementById('newProjAuthor').value.trim() || currentUser;
+                const category = document.getElementById('newProjCategory').value;
+                const entryUrlRaw = document.getElementById('newProjEntryUrl').value.trim();
+                const description = document.getElementById('newProjDesc').value.trim();
+                const image = uploadedImageDataUrl || 'https://placehold.co/800x450/18181b/ffffff?text=Entacritic';
+
+                const titleCheck = validateTextSecurity(title, {
+                    minLen: 1,
+                    maxLen: 80,
+                    blockLinks: false,
+                    allowRepetitive: true,
+                    fieldName: '작품 제목'
+                });
+                if (!titleCheck.valid) {
+                    await showMessage(titleCheck.reason, '입력 오류');
+                    return;
+                }
+
+                const authorCheck = validateTextSecurity(authorName, {
+                    minLen: 1,
+                    maxLen: 40,
+                    blockLinks: false,
+                    allowRepetitive: true,
+                    fieldName: '제작자 이름'
+                });
+                if (!authorCheck.valid) {
+                    await showMessage(authorCheck.reason, '입력 오류');
+                    return;
+                }
+
+                const descCheck = validateTextSecurity(description, {
+                    minLen: 2,
+                    maxLen: 1000,
+                    blockLinks: false,
+                    fieldName: '작품 요약 설명'
+                });
+                if (!descCheck.valid) {
+                    await showMessage(descCheck.reason, '입력 오류');
+                    return;
+                }
+
+                const parsedEntry = parseEntryProjectUrl(entryUrlRaw);
+                if (!parsedEntry.valid) {
+                    await showMessage(parsedEntry.error, '링크 형식 오류');
+                    return;
+                }
+
+                const isDuplicate = dbProjects.some(p => {
+                    if (p.entryProjectId && p.entryProjectId.toLowerCase() === parsedEntry.projectId) {
+                        return true;
+                    }
+                    if (p.entryUrl) {
+                        const existingParsed = parseEntryProjectUrl(p.entryUrl);
+                        if (existingParsed.valid && existingParsed.projectId === parsedEntry.projectId) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+
+                if (isDuplicate) {
+                    await showMessage('이미 등록되어 있는 엔트리 작품입니다!\n동일 작품은 중복 등록할 수 없습니다.', '중복 작품 경고');
+                    return;
+                }
+
+                const today = new Date();
+                const dateStr = `${today.getFullYear()}.${(today.getMonth() + 1).toString().padStart(2, '0')}.${today.getDate().toString().padStart(2, '0')}`;
+
+                const newId = 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+                const newProjData = {
+                    id: newId,
+                    title: title,
+                    category: category,
+                    author: authorName,
+                    registeredBy: currentUser,
+                    date: dateStr,
+                    description: description,
+                    image: image,
+                    entryUrl: parsedEntry.canonicalUrl,
+                    entryProjectId: parsedEntry.projectId,
+                    createdAt: Date.now(),
+                    reviews: []
+                };
+
+                if (db) {
+                    try {
+                        const projDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', newId);
+                        await setDoc(projDocRef, newProjData);
+                    } catch (err) {
+                        console.error("Cloud project submit error:", err);
+                        await showMessage(
+                            `클라우드 서버에 작품을 업로드하지 못했습니다.\n(오류: ${err?.code || err?.message})\n\nFirebase 익명 로그인 및 Firestore 보안 규칙을 확인해 주세요.`,
+                            '작품 업로드 실패'
+                        );
+                        return;
+                    }
+                }
+
+                if (!dbProjects.some(p => p.id === newId)) {
+                    dbProjects.unshift(newProjData);
+                    saveProjectsToLocalBackup();
+                }
+                recordActionSuccess('project');
+
+                document.getElementById('newProjectForm').reset();
+                closeNewProjectModal();
+                showHomePage();
+                renderGrid();
             } finally {
                 if (submitBtn) submitBtn.disabled = false;
             }
-
-            // 클라우드 저장 성공(또는 로컬 전용 모드) 시 로컬 상태 반영
-            if (!dbProjects.some(p => p.id === newId)) {
-                dbProjects.unshift(newProjData);
-                saveProjectsToLocalBackup();
-            }
-            recordActionSuccess('project');
-
-            document.getElementById('newProjectForm').reset();
-            closeNewProjectModal();
-            showHomePage();
-            renderGrid();
         };
 
         function bindDelegatedEvents() {
@@ -3118,7 +3828,7 @@
                 const card = e.target.closest('.project-card[data-project-id]');
                 if (card) {
                     const pid = card.getAttribute('data-project-id');
-                    if (pid) showDetailPage(pid);
+                    if (pid) showDetailPage(pid, { resetFilter: true, scrollToTop: true });
                     return;
                 }
 
@@ -3131,52 +3841,81 @@
 
                 const toggleBtn = e.target.closest('.toggle-blind-btn');
                 if (toggleBtn) {
-                    const wrapper = toggleBtn.closest('.bg-\\[\\#f4f4f4\\]');
+                    const wrapper = toggleBtn.closest('.review-card-wrapper');
                     const content = wrapper ? wrapper.querySelector('.blinded-original-content') : null;
                     if (content) {
                         const isHidden = content.classList.contains('hidden');
                         content.classList.toggle('hidden');
                         toggleBtn.textContent = isHidden ? '원문 접기' : '원문 보기';
                     }
+                    return;
                 }
+
+                // 긴 리뷰 더보기 / 접기 토글 (Metacritic Read More 스타일)
+                const readMoreBtn = e.target.closest('.read-more-review-btn');
+                if (readMoreBtn) {
+                    const wrapper = readMoreBtn.closest('.review-card-wrapper');
+                    const commentEl = wrapper ? wrapper.querySelector('.review-comment-text') : null;
+                    if (commentEl) {
+                        const isClamped = commentEl.classList.contains('line-clamp-3');
+                        commentEl.classList.toggle('line-clamp-3', !isClamped);
+                        readMoreBtn.textContent = isClamped ? '접기' : '더보기';
+                    }
+                }
+            });
+
+            // ESC 키로 열려있는 모달 / 드롭다운 / 모바일 메뉴 닫기
+            document.addEventListener('keydown', (e) => {
+                if (e.key !== 'Escape') return;
+                closeAllNavDropdowns();
+                closeMobileDrawer();
+                const customDialog = document.getElementById('customDialogModal');
+                if (customDialog && !customDialog.classList.contains('hidden')) return;
+                closeLoginModal();
+                closeWriteReviewModal();
+                closeNewProjectModal();
+                closeEditAuthorModal();
+                closeReportModal();
             });
         }
 
-        // Initialize App
+        // 앱 초기화 (로딩 화면 없이 즉시 화면 렌더링 후 백그라운드 동기화)
         async function startApp() {
             try {
-                updateLoadingText('보안 및 환경 설정 확인 중...');
-                await initDeviceIdentity();
                 loadFromLocalBackup();
+                initNavDropdowns();
+                renderUserAccountUI();
+                bindDelegatedEvents();
+                renderGrid();
+
+                await initDeviceIdentity();
 
                 if (isFirebaseConfigured && auth) {
-                    updateLoadingText('실시간 서버에 연결하는 중...');
                     await initAuth();
                 }
 
                 if (currentSession) {
-                    updateLoadingText('로그인 정보 확인 중...');
                     const valid = await verifyCurrentSession();
                     if (!valid) {
                         saveSession(null);
+                        renderUserAccountUI();
                     }
                 }
 
-                renderUserAccountUI();
-                bindDelegatedEvents();
-                updateLoadingText('최신 작품과 평점을 불러오는 중...');
                 listenToRealtimeData();
             } catch (err) {
                 console.error("App init error:", err);
                 isInitialDataLoaded = true;
                 renderGrid();
-                hideLoadingOverlay();
             }
         }
 
-        window.onload = function() {
+        // window.onload 대신 DOM 준비 즉시 실행하여 초기 체감 속도 개선
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', startApp);
+        } else {
             startApp();
-        };
+        }
     </script>
 </body>
 </html>
