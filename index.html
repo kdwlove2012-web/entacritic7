@@ -208,10 +208,10 @@
 
         <!-- HOME PAGE -->
         <section id="homePage" class="space-y-10 sm:space-y-14 pb-8">
-            <!-- SECTION 1: New and Notable -->
+            <!-- SECTION 1: New and Notable (75점 이상 최신 5작품) -->
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
                 <div class="flex items-center justify-between gap-4 mb-4 sm:mb-5">
-                    <div class="flex-grow border-b border-zinc-900 pb-2 flex items-baseline justify-between gap-3">
+                    <div class="flex-grow border-b border-zinc-900 pb-2 flex items-baseline justify-between flex-wrap gap-2">
                         <h2 class="text-lg sm:text-2xl font-black tracking-tight text-zinc-900">최신 및 주목할 작품</h2>
                         <span id="totalArchiveBadge" class="text-[11px] sm:text-xs font-bold text-zinc-500">불러오는 중...</span>
                     </div>
@@ -260,7 +260,7 @@
                         </div>
                         <h3 class="text-2xl sm:text-3xl font-black tracking-tight">엔트리 작품 평가의 공정한 기준</h3>
                         <p class="text-xs sm:text-sm text-white/90 font-medium leading-relaxed">
-                            Firebase 공식 계정 인증과 하위 컬렉션 분산 저장, 원자적 평점 집계 시스템으로 수천 개의 작품과 수만 개의 리뷰도 1MiB 제한 없이 빠르고 공정하게 집계합니다.
+                            Firebase 공식 계정 인증과 하위 컬렉션 분산 저장, 원자적 평점 집계로 수천 개의 작품과 리뷰도 1MiB 제한 없이 빠르고 공정하게 집계합니다.
                         </p>
                     </div>
                     <div class="bg-white text-zinc-900 rounded-xl p-4 sm:p-5 w-full md:w-80 shrink-0 shadow-lg space-y-2.5 text-xs">
@@ -284,12 +284,15 @@
             <!-- SECTION 5: Paginated All Projects Archive -->
             <div id="archiveSection" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-zinc-900 pb-2.5 mb-5">
-                    <div class="flex items-center gap-3 flex-wrap">
+                    <div class="flex items-center gap-2.5 flex-wrap">
                         <h2 class="text-lg sm:text-2xl font-black tracking-tight text-zinc-900">엔트리 작품 아카이브</h2>
                         <span id="categoryLabel" class="text-xs font-bold bg-zinc-100 border border-zinc-300 text-zinc-700 px-2.5 py-0.5 rounded">
                             카테고리: 전체
                         </span>
                         <span id="archiveCountLabel" class="text-xs font-semibold text-zinc-500"></span>
+                        <button type="button" id="archiveGoHubBtn" onclick="navigateToCategory(selectedCategory)" class="hidden text-xs font-extrabold text-zinc-900 hover:text-emerald-600 underline underline-offset-2 transition">
+                            전용 탭에서 전체 보기 →
+                        </button>
                     </div>
 
                     <div class="flex items-center gap-2 self-end sm:self-auto">
@@ -344,7 +347,7 @@
             <div>
                 <div class="flex items-center justify-between gap-4 mb-4 sm:mb-5">
                     <div class="flex-grow border-b border-zinc-900 pb-2">
-                        <h2 class="text-base sm:text-xl font-black tracking-tight text-zinc-900">최신 등록 작품</h2>
+                        <h2 id="categoryHubLatestTitle" class="text-base sm:text-xl font-black tracking-tight text-zinc-900">최신 등록 작품</h2>
                     </div>
                     <div class="flex items-center gap-2 shrink-0 pb-1">
                         <button type="button" onclick="scrollCarousel('categoryHubLatest', -1)" aria-label="이전" class="w-8 h-8 rounded-full border border-zinc-300 hover:border-zinc-900 text-zinc-500 hover:text-zinc-900 flex items-center justify-center transition">
@@ -361,7 +364,7 @@
             <div>
                 <div class="flex items-center justify-between gap-4 mb-4 sm:mb-5">
                     <div class="flex-grow border-b border-zinc-900 pb-2">
-                        <h2 class="text-base sm:text-xl font-black tracking-tight text-zinc-900">최고 평점 작품</h2>
+                        <h2 id="categoryHubTopTitle" class="text-base sm:text-xl font-black tracking-tight text-zinc-900">최고 평점 작품</h2>
                     </div>
                     <div class="flex items-center gap-2 shrink-0 pb-1">
                         <button type="button" onclick="scrollCarousel('categoryHubTop', -1)" aria-label="이전" class="w-8 h-8 rounded-full border border-zinc-300 hover:border-zinc-900 text-zinc-500 hover:text-zinc-900 flex items-center justify-center transition">
@@ -377,7 +380,7 @@
 
             <div>
                 <div class="flex items-end justify-between gap-3 border-b border-zinc-900 pb-2.5 mb-5">
-                    <h2 class="text-lg sm:text-xl font-black tracking-tight text-zinc-900">전체 목록</h2>
+                    <h2 id="categoryHubAllTitle" class="text-lg sm:text-xl font-black tracking-tight text-zinc-900">전체 목록</h2>
                     <select id="categoryHubSort" onchange="handleSortChange(this.value)" class="bg-white border border-zinc-300 text-zinc-800 text-xs font-bold rounded-md px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-zinc-900">
                         <option value="latest">최신 등록순</option>
                         <option value="highest">평점 높은순</option>
@@ -1956,28 +1959,97 @@ service firebase.storage {
         function sortListInMemory(items, sort) {
             const cloned = [...items];
             if (sort === 'highest') {
-                cloned.sort((a, b) => (b.avgScore ?? -1) - (a.avgScore ?? -1));
+                cloned.sort((a, b) => {
+                    const sa = a.avgScore ?? -1;
+                    const sb = b.avgScore ?? -1;
+                    if (sb !== sa) return sb - sa;
+                    return (b.createdAt ?? 0) - (a.createdAt ?? 0);
+                });
             } else if (sort === 'lowest') {
                 cloned.sort((a, b) => {
                     const sa = a.avgScore ?? -1;
                     const sb = b.avgScore ?? -1;
-                    if (sa === -1 && sb === -1) return 0;
+                    if (sa === -1 && sb === -1) return (b.createdAt ?? 0) - (a.createdAt ?? 0);
                     if (sa === -1) return 1;
                     if (sb === -1) return -1;
-                    return sa - sb;
+                    if (sa !== sb) return sa - sb;
+                    return (b.createdAt ?? 0) - (a.createdAt ?? 0);
                 });
             } else if (sort === 'reviews') {
-                cloned.sort((a, b) => (b.reviewCount ?? 0) - (a.reviewCount ?? 0));
+                cloned.sort((a, b) => {
+                    const ca = a.reviewCount ?? 0;
+                    const cb = b.reviewCount ?? 0;
+                    if (cb !== ca) return cb - ca;
+                    const sa = a.avgScore ?? -1;
+                    const sb = b.avgScore ?? -1;
+                    if (sb !== sa) return sb - sa;
+                    return (b.createdAt ?? 0) - (a.createdAt ?? 0);
+                });
             } else {
                 cloned.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
             }
             return cloned;
         }
 
+        // 레거시(v1: avgScore/reviewCount 필드 없음) 및 인덱스 미생성 환경에서도 빈 결과가 나오지 않도록 보완 조회
+        async function fetchFallbackSortedPage({ category = '전체', sort = 'latest', pageSize = PAGE_SIZE, seedItems = [] } = {}) {
+            const projectsRef = getProjectsColRef();
+            const mergedMap = new Map();
+            seedItems.forEach(item => { if (item) mergedMap.set(item.id, item); });
+
+            try {
+                const fbConstraints = [];
+                if (category && category !== '전체') {
+                    fbConstraints.push(where('category', '==', category));
+                    fbConstraints.push(limit(200));
+                } else {
+                    fbConstraints.push(orderBy('createdAt', 'desc'));
+                    fbConstraints.push(limit(200));
+                }
+                const snap = await getDocs(query(projectsRef, ...fbConstraints));
+                snap.docs.forEach(d => {
+                    const norm = normalizeProjectDoc(d.id, d.data());
+                    if (norm) mergedMap.set(norm.id, norm);
+                });
+            } catch (fbErr) {
+                if (handleFirestorePermissionError(fbErr)) {
+                    localOnlyProjects
+                        .filter(p => category === '전체' || p.category === category)
+                        .forEach(p => mergedMap.set(p.id, p));
+                }
+            }
+
+            const sortedAll = sortListInMemory(Array.from(mergedMap.values()), sort);
+            const pageItems = sortedAll.slice(0, pageSize);
+            const hasMore = sortedAll.length > pageSize;
+            const memoryCursor = hasMore ? { isMemoryCursor: true, items: sortedAll, offset: pageSize } : null;
+            return { items: pageItems, lastDoc: memoryCursor, hasMore };
+        }
+
         async function fetchProjectsPage({ category = '전체', sort = 'latest', pageSize = PAGE_SIZE, cursorDoc = null } = {}) {
+            // 메모리 커서 페이지네이션 이어받기
+            if (cursorDoc && cursorDoc.isMemoryCursor) {
+                const start = cursorDoc.offset || 0;
+                const end = start + pageSize;
+                const slice = cursorDoc.items.slice(start, end);
+                const hasMore = cursorDoc.items.length > end;
+                return {
+                    items: slice,
+                    lastDoc: hasMore ? { isMemoryCursor: true, items: cursorDoc.items, offset: end } : null,
+                    hasMore
+                };
+            }
+
             if (!db || firestorePermissionBlocked) {
                 const filtered = localOnlyProjects.filter(p => category === '전체' || p.category === category);
-                return { items: sortListInMemory(filtered, sort), lastDoc: null, hasMore: false };
+                const sortedAll = sortListInMemory(filtered, sort);
+                const slice = sortedAll.slice(0, pageSize);
+                const hasMore = sortedAll.length > pageSize;
+                return {
+                    items: slice,
+                    lastDoc: hasMore ? { isMemoryCursor: true, items: sortedAll, offset: pageSize } : null,
+                    hasMore
+                };
             }
 
             const projectsRef = getProjectsColRef();
@@ -1996,35 +2068,131 @@ service firebase.storage {
                 const hasMore = docs.length > pageSize;
                 const pageDocs = hasMore ? docs.slice(0, pageSize) : docs;
                 const items = pageDocs.map(d => normalizeProjectDoc(d.id, d.data())).filter(Boolean);
+
+                // [버그 수정] 레거시 문서(avgScore/reviewCount 필드 없음)나 미평가 작품(avgScore: -1)이
+                // 서버 orderBy 쿼리에서 누락되어 첫 페이지가 비거나 적게 나오는 경우 자동 보완 조회
+                if (!cursorDoc && sort !== 'latest') {
+                    const expectedTotal = category === '전체' ? totalProjectsCount : (categoryCounts[category] ?? 0);
+                    const needsSupplement = expectedTotal > 0
+                        ? items.length < Math.min(pageSize, expectedTotal)
+                        : items.length === 0;
+                    if (needsSupplement) {
+                        return await fetchFallbackSortedPage({ category, sort, pageSize, seedItems: items });
+                    }
+                }
+
                 return { items, lastDoc: pageDocs.length > 0 ? pageDocs[pageDocs.length - 1] : null, hasMore };
             } catch (err) {
                 if (handleFirestorePermissionError(err)) {
                     const filtered = localOnlyProjects.filter(p => category === '전체' || p.category === category);
-                    return { items: sortListInMemory(filtered, sort), lastDoc: null, hasMore: false };
+                    return { items: sortListInMemory(filtered, sort).slice(0, pageSize), lastDoc: null, hasMore: false };
                 }
                 if (err?.code === 'failed-precondition') {
-                    const fallbackConstraints = [];
-                    if (category && category !== '전체') fallbackConstraints.push(where('category', '==', category));
-                    else fallbackConstraints.push(orderBy('createdAt', 'desc'));
-                    if (cursorDoc) fallbackConstraints.push(startAfter(cursorDoc));
-                    fallbackConstraints.push(limit(pageSize * 2));
-
-                    try {
-                        const snap = await getDocs(query(projectsRef, ...fallbackConstraints));
-                        const items = sortListInMemory(snap.docs.map(d => normalizeProjectDoc(d.id, d.data())).filter(Boolean), sort);
-                        return {
-                            items: items.slice(0, pageSize),
-                            lastDoc: snap.docs.length >= pageSize * 2 ? snap.docs[snap.docs.length - 1] : null,
-                            hasMore: snap.docs.length >= pageSize * 2
-                        };
-                    } catch (fbErr) {
-                        handleFirestorePermissionError(fbErr);
-                        return { items: [], lastDoc: null, hasMore: false };
-                    }
+                    return await fetchFallbackSortedPage({ category, sort, pageSize });
                 }
                 console.warn('fetchProjectsPage error:', err?.code || err?.message);
                 return { items: [], lastDoc: null, hasMore: false };
             }
+        }
+
+        /**
+         * [선정 기준] 최신 및 주목할 작품: 평점 75점 이상(호평)이면서 가장 최신 작품 5개
+         */
+        async function fetchNotableProjects() {
+            const filterTop5 = (list) => list
+                .filter(p => p && p.reviewCount > 0 && p.avgScore >= 75)
+                .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+                .slice(0, 5);
+
+            if (!db || firestorePermissionBlocked) {
+                return filterTop5(localOnlyProjects);
+            }
+
+            const projectsRef = getProjectsColRef();
+            const mergedMap = new Map();
+
+            try {
+                const snap = await getDocs(
+                    query(projectsRef, where('avgScore', '>=', 75), orderBy('createdAt', 'desc'), limit(5))
+                );
+                snap.docs.forEach(d => {
+                    const norm = normalizeProjectDoc(d.id, d.data());
+                    if (norm) mergedMap.set(norm.id, norm);
+                });
+            } catch (err) {
+                if (handleFirestorePermissionError(err)) {
+                    return filterTop5(localOnlyProjects);
+                }
+            }
+
+            // 복합 인덱스 미생성 또는 레거시 문서(avgScore 미기입) 보완
+            if (mergedMap.size < 5) {
+                try {
+                    const recentSnap = await getDocs(
+                        query(projectsRef, orderBy('createdAt', 'desc'), limit(120))
+                    );
+                    recentSnap.docs.forEach(d => {
+                        const norm = normalizeProjectDoc(d.id, d.data());
+                        if (norm) mergedMap.set(norm.id, norm);
+                    });
+                } catch (err) {
+                    handleFirestorePermissionError(err);
+                }
+            }
+
+            return filterTop5(Array.from(mergedMap.values()));
+        }
+
+        /**
+         * [선정 기준] 지금 주목받는 인기 작품: 리뷰 수·평점 종합 인기 지수 상위 10개
+         */
+        async function fetchTrendingProjects() {
+            const sortTop10 = (list) => [...list]
+                .sort((a, b) => {
+                    if ((b.trendingScore || 0) !== (a.trendingScore || 0)) {
+                        return (b.trendingScore || 0) - (a.trendingScore || 0);
+                    }
+                    return (b.createdAt || 0) - (a.createdAt || 0);
+                })
+                .slice(0, 10);
+
+            if (!db || firestorePermissionBlocked) {
+                return sortTop10(localOnlyProjects);
+            }
+
+            const projectsRef = getProjectsColRef();
+            const mergedMap = new Map();
+
+            try {
+                const snap = await getDocs(
+                    query(projectsRef, orderBy('trendingScore', 'desc'), limit(10))
+                );
+                snap.docs.forEach(d => {
+                    const norm = normalizeProjectDoc(d.id, d.data());
+                    if (norm) mergedMap.set(norm.id, norm);
+                });
+            } catch (err) {
+                if (handleFirestorePermissionError(err)) {
+                    return sortTop10(localOnlyProjects);
+                }
+            }
+
+            // 레거시 문서(trendingScore 미기입) 보완
+            if (mergedMap.size < Math.min(10, totalProjectsCount || 10)) {
+                try {
+                    const recentSnap = await getDocs(
+                        query(projectsRef, orderBy('createdAt', 'desc'), limit(100))
+                    );
+                    recentSnap.docs.forEach(d => {
+                        const norm = normalizeProjectDoc(d.id, d.data());
+                        if (norm) mergedMap.set(norm.id, norm);
+                    });
+                } catch (err) {
+                    handleFirestorePermissionError(err);
+                }
+            }
+
+            return sortTop10(Array.from(mergedMap.values()));
         }
 
         async function fetchProjectCounts() {
@@ -2078,44 +2246,24 @@ service firebase.storage {
             renderHomeSkeletons();
             updateCategoryActiveStyles();
 
-            const countsPromise = fetchProjectCounts();
+            // 서버 카운트를 먼저 확보하여 레거시 문서 보완 여부를 정확히 판별
+            await fetchProjectCounts();
 
             const notablePromise = (async () => {
-                const res = await fetchProjectsPage({ category: '전체', sort: 'latest', pageSize: 12 });
-                notableProjects = res.items;
+                notableProjects = await fetchNotableProjects();
                 renderNotableCarousel();
             })();
 
             const trendingPromise = (async () => {
-                if (!db || firestorePermissionBlocked) {
-                    trendingProjects = [...localOnlyProjects].sort((a, b) => b.trendingScore - a.trendingScore).slice(0, 12);
-                    renderTrendingCarousel();
-                    return;
-                }
-                try {
-                    const snap = await getDocs(query(getProjectsColRef(), orderBy('trendingScore', 'desc'), limit(12)));
-                    trendingProjects = snap.docs.map(d => normalizeProjectDoc(d.id, d.data())).filter(Boolean);
-                    if (trendingProjects.length === 0) {
-                        const fb = await fetchProjectsPage({ sort: 'latest', pageSize: 12 });
-                        trendingProjects = [...fb.items].sort((a, b) => b.trendingScore - a.trendingScore);
-                    }
-                } catch (err) {
-                    handleFirestorePermissionError(err);
-                    try {
-                        const fb = await fetchProjectsPage({ sort: 'latest', pageSize: 12 });
-                        trendingProjects = [...fb.items].sort((a, b) => b.trendingScore - a.trendingScore);
-                    } catch (_) {
-                        trendingProjects = [];
-                    }
-                }
+                trendingProjects = await fetchTrendingProjects();
                 renderTrendingCarousel();
             })();
 
             const archivePromise = loadArchiveFirstPage();
 
+            // [선정 기준] 게임 및 나머지 모든 카테고리 홈 행은 분야별 최신 10작품 표시
             const categoryRowsPromise = (async () => {
-                const showcaseCats = ['게임', '생활과 도구', '스토리텔링', '예술', '지식 공유'];
-                await Promise.all(showcaseCats.map(async (cat) => {
+                await Promise.all(ALL_CATEGORIES.map(async (cat) => {
                     const tab = categoryRowTabs[cat] || 'latest';
                     const res = await fetchProjectsPage({ category: cat, sort: tab, pageSize: 10 });
                     if (!categoryShowcaseCache[cat]) categoryShowcaseCache[cat] = {};
@@ -2124,7 +2272,7 @@ service firebase.storage {
                 renderHomeCategoryRows();
             })();
 
-            await Promise.all([countsPromise, notablePromise, trendingPromise, archivePromise, categoryRowsPromise]);
+            await Promise.all([notablePromise, trendingPromise, archivePromise, categoryRowsPromise]);
             updateCountBadgesUI();
         };
 
@@ -2309,10 +2457,12 @@ service firebase.storage {
             const carousel = document.getElementById('notableCarousel');
             if (!carousel) return;
             if (notableProjects.length === 0) {
+                const msg = totalProjectsCount > 0
+                    ? '현재 75점 이상(호평)을 받은 작품이 아직 없습니다. 작품에 리뷰를 남겨 첫 주목할 작품을 선정해 보세요!'
+                    : "아직 등록된 작품이 없습니다. 상단의 '작품 등록' 버튼을 눌러 첫 작품을 등록해 보세요!";
                 carousel.innerHTML = `
-                <div class="w-full py-12 bg-[#f4f4f4] rounded-xl text-center text-zinc-400 text-sm font-bold space-y-2 border border-zinc-200/80">
-                    <i class="fa-solid fa-sparkles text-2xl text-zinc-300"></i>
-                    <p>아직 등록된 작품이 없습니다. 상단의 '작품 등록' 버튼을 눌러 첫 작품을 등록해 보세요!</p>
+                <div class="w-full py-12 bg-[#f4f4f4] rounded-xl text-center text-zinc-500 text-sm font-bold border border-zinc-200/80 px-4">
+                    <p>${escapeHtml(msg)}</p>
                 </div>`;
                 return;
             }
@@ -2336,8 +2486,7 @@ service firebase.storage {
             const container = document.getElementById('categoryRowsContainer');
             if (!container) return;
 
-            const showcaseCats = ['게임', '생활과 도구', '스토리텔링', '예술', '지식 공유'];
-            const activeRows = showcaseCats
+            const activeRows = ALL_CATEGORIES
                 .map(cat => {
                     const tab = categoryRowTabs[cat] || 'latest';
                     const items = categoryShowcaseCache[cat]?.[tab] || categoryShowcaseCache[cat]?.latest || [];
@@ -2352,6 +2501,7 @@ service firebase.storage {
 
             container.innerHTML = activeRows.map((row, idx) => {
                 const carouselId = `catRowCarousel_${idx}`;
+                const totalInCat = categoryCounts[row.cat] ?? row.items.length;
                 const tabBtn = (val, label) => {
                     const isSelected = row.tab === val;
                     return `<button type="button" onclick="setCategoryRowTab('${row.cat}', '${val}')" class="text-xs pb-1 transition whitespace-nowrap ${isSelected ? 'font-black text-zinc-900 border-b-2 border-zinc-900' : 'font-semibold text-zinc-400 hover:text-zinc-900'}">${label}</button>`;
@@ -2360,11 +2510,13 @@ service firebase.storage {
                 return `
                 <div>
                     <div class="flex items-center justify-between gap-4 mb-3">
-                        <div class="flex-grow border-b border-zinc-900 pb-2 flex items-baseline gap-3">
-                            <h2 class="text-xl sm:text-2xl font-black tracking-tight text-zinc-900">${escapeHtml(row.cat)}</h2>
-                            <button type="button" onclick="navigateToCategory('${row.cat}')" class="text-[11px] font-extrabold text-zinc-500 hover:text-zinc-900 uppercase tracking-wider transition">
-                                ${escapeHtml(row.cat)} 홈 &gt;
-                            </button>
+                        <div class="flex-grow border-b border-zinc-900 pb-2 flex items-baseline justify-between flex-wrap gap-2">
+                            <div class="flex items-baseline gap-3">
+                                <h2 class="text-xl sm:text-2xl font-black tracking-tight text-zinc-900">${escapeHtml(row.cat)}</h2>
+                                <button type="button" onclick="navigateToCategory('${row.cat}')" class="text-[11px] font-extrabold text-zinc-500 hover:text-zinc-900 tracking-wider transition">
+                                    ${escapeHtml(row.cat)} 홈 (${totalInCat.toLocaleString()}개) &gt;
+                                </button>
+                            </div>
                         </div>
                         <div class="flex items-center gap-2 shrink-0 pb-1">
                             <button type="button" onclick="scrollCarousel('${carouselId}', -1)" aria-label="이전" class="w-8 h-8 rounded-full border border-zinc-300 hover:border-zinc-900 text-zinc-500 hover:text-zinc-900 flex items-center justify-center transition">
@@ -2383,7 +2535,7 @@ service firebase.storage {
                     </div>
 
                     <div id="${carouselId}" class="flex gap-3.5 sm:gap-4 overflow-x-auto no-scrollbar touch-scroll-x snap-x snap-mandatory pb-2 scroll-smooth">
-                        ${row.items.map(p => buildCompactCardHtml(p, { showPlayButton: false })).join('')}
+                        ${row.items.slice(0, 10).map(p => buildCompactCardHtml(p, { showPlayButton: false })).join('')}
                     </div>
                 </div>`;
             }).join('');
@@ -2533,12 +2685,18 @@ service firebase.storage {
             const titleEl = document.getElementById('categoryHubTitle');
             const subEl = document.getElementById('categoryHubSubtitle');
             const countEl = document.getElementById('categoryHubCount');
+            const latestTitleEl = document.getElementById('categoryHubLatestTitle');
+            const topTitleEl = document.getElementById('categoryHubTopTitle');
+            const allTitleEl = document.getElementById('categoryHubAllTitle');
             if (titleEl) {
                 titleEl.textContent = cat;
                 titleEl.className = `text-3xl sm:text-5xl font-black tracking-tight ${meta.colorClass}`;
             }
             if (subEl) subEl.textContent = meta.subtitle;
             if (countEl) countEl.textContent = `총 ${(categoryCounts[cat] ?? 0).toLocaleString()}개 작품`;
+            if (latestTitleEl) latestTitleEl.textContent = `최신 등록 ${cat}`;
+            if (topTitleEl) topTitleEl.textContent = `최고 평점 ${cat}`;
+            if (allTitleEl) allTitleEl.textContent = `${cat} 전체 목록`;
 
             const hubSort = document.getElementById('categoryHubSort');
             if (hubSort && hubSort.value !== currentSort) hubSort.value = currentSort;
@@ -2548,13 +2706,6 @@ service firebase.storage {
             document.getElementById('categoryHubGrid').innerHTML = Array.from({ length: 8 }, () => buildSkeletonCardHtml(false)).join('');
 
             try {
-                const [latestRes, topRes] = await Promise.all([
-                    fetchProjectsPage({ category: cat, sort: 'latest', pageSize: 12 }),
-                    fetchProjectsPage({ category: cat, sort: 'highest', pageSize: 12 })
-                ]);
-                hubLatestItems = latestRes.items;
-                hubTopItems = topRes.items;
-
                 if (db && !firestorePermissionBlocked) {
                     try {
                         const cSnap = await getCountFromServer(query(getProjectsColRef(), where('category', '==', cat)));
@@ -2564,6 +2715,14 @@ service firebase.storage {
                         handleFirestorePermissionError(err);
                     }
                 }
+
+                // [선정 기준] 카테고리 전용 탭 상단: 최신 10작품 + 최고 평점 10작품, 하단: 전체 목록
+                const [latestRes, topRes] = await Promise.all([
+                    fetchProjectsPage({ category: cat, sort: 'latest', pageSize: 10 }),
+                    fetchProjectsPage({ category: cat, sort: 'highest', pageSize: 10 })
+                ]);
+                hubLatestItems = latestRes.items.slice(0, 10);
+                hubTopItems = topRes.items.slice(0, 10);
             } catch (err) {
                 handleFirestorePermissionError(err);
                 hubLatestItems = [];
@@ -4034,6 +4193,15 @@ service firebase.storage {
         window.filterCategory = async function(cat) {
             selectedCategory = cat;
             document.getElementById('categoryLabel').textContent = `카테고리: ${cat}`;
+            const goHubBtn = document.getElementById('archiveGoHubBtn');
+            if (goHubBtn) {
+                if (cat && cat !== '전체') {
+                    goHubBtn.textContent = `${cat} 탭에서 전체 보기 →`;
+                    goHubBtn.classList.remove('hidden');
+                } else {
+                    goHubBtn.classList.add('hidden');
+                }
+            }
             updateCategoryActiveStyles();
             updateCountBadgesUI();
             await loadArchiveFirstPage();
